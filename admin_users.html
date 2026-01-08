@@ -62,39 +62,47 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'URL_WEB_APP_ANDA';
     const SHEET_NAME = 'Users';
 
-    // 1. Inisialisasi IndexedDB (Dexie)
+    // 1. Inisialisasi IndexedDB (Dexie) tetap sama
     const db = new Dexie("NebulaDB");
     db.version(1).stores({
-        users: '++id, username, role, sync_status' // sync_status: 0 (pending), 1 (synced)
+        users: '++id, username, role, sync_status'
     });
 
+    
     // 2. Fungsi Render Tabel dari Lokal
-    async function renderLocalTable() {
-        const users = await db.users.toArray();
-        const $tbody = $('#user-table-body');
-        $tbody.empty();
+    async function syncDataToCloud() {
+        if(!navigator.onLine) return;
 
-        users.forEach(u => {
-            const statusIcon = u.sync_status === 1 
-                ? '<span class="badge bg-success-subtle text-success small">Synced</span>' 
-                : '<span class="badge bg-warning-subtle text-warning small">Pending Sync</span>';
-            
-            $tbody.append(`
-                <tr class="border-bottom border-secondary border-opacity-10">
-                    <td class="ps-4 py-3 fw-medium text-white">${u.username}</td>
-                    <td>${u.role}</td>
-                    <td>${statusIcon}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm text-danger border-0" onclick="deleteUser(${u.id}, '${u.username}')">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-                    </td>
-                </tr>
-            `);
-        });
+        const pendingData = await db.users.where("sync_status").equals(0).toArray();
+        if(pendingData.length === 0) {
+            $('#sync-status').text("Status: Terkoneksi & Sinkron");
+            return;
+        }
+
+        $('#sync-status').text(`Status: Menyinkronkan ${pendingData.length} data...`);
+
+        for(let item of pendingData) {
+            try {
+                // MENGGUNAKAN window.SCRIPT_URL secara langsung
+                const res = await fetch(window.SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    body: JSON.stringify({
+                        action: "add",
+                        sheetName: SHEET_NAME,
+                        data: { Username: item.username, Role: item.role }
+                    })
+                });
+                
+                await db.users.update(item.id, { sync_status: 1 });
+            } catch (e) {
+                console.error("Sync Error:", e);
+            }
+        }
+        renderLocalTable();
+        $('#sync-status').text("Status: Sinkronisasi Selesai");
     }
 
     // 3. Tambah User (Offline-First)
