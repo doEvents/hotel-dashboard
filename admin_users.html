@@ -1,16 +1,14 @@
-<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0">Manajemen Users</h4>
-            <small class="text-muted" id="sync-status">Status: Mengecek koneksi...</small>
+            <h4 class="fw-bold mb-0">Manajemen Users (Native)</h4>
+            <small class="text-muted" id="sync-status">Status: Standby</small>
         </div>
         <div class="d-flex gap-2">
-            <button onclick="syncDataManual()" class="btn btn-sm btn-outline-info shadow-sm">
+            <button onclick="syncDataToCloud()" class="btn btn-sm btn-outline-info shadow-sm">
                 <i class="bi bi-arrow-repeat"></i> Sync
             </button>
-            <button onclick="$('#modalUser').modal('show')" class="btn btn-sm btn-primary shadow-sm px-3">
+            <button onclick="showUserModal()" class="btn btn-sm btn-primary shadow-sm px-3">
                 <i class="bi bi-person-plus-fill me-2"></i>Tambah User
             </button>
         </div>
@@ -62,115 +60,131 @@
 </div>
 
 <script>
-    const SHEET_NAME = 'Users';
+    // --- NATIVE MODAL HANDLER ---
+    // Menggunakan bootstrap.Modal asli bukan jQuery .modal()
+    const userModal = new bootstrap.Modal(document.getElementById('modalUser'));
+    function showUserModal() { userModal.show(); }
 
-    // 1. Inisialisasi IndexedDB (Dexie) tetap sama
-    const db = new Dexie("NebulaDB");
-    db.version(1).stores({
-        users: '++id, username, role, sync_status'
-    });
+    // --- NATIVE INDEXEDDB HANDLER ---
+    const DB_NAME = "NebulaLocal";
+    const STORE_NAME = "users";
+    let db;
 
-    
-    // 2. Fungsi Render Tabel dari Lokal
-    async function syncDataToCloud() {
-        if(!navigator.onLine) return;
+    // Inisialisasi Database
+    const request = indexedDB.open(DB_NAME, 1);
 
-        const pendingData = await db.users.where("sync_status").equals(0).toArray();
-        if(pendingData.length === 0) {
-            $('#sync-status').text("Status: Terkoneksi & Sinkron");
-            return;
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
         }
+    };
 
-        $('#sync-status').text(`Status: Menyinkronkan ${pendingData.length} data...`);
-
-        for(let item of pendingData) {
-            try {
-                // MENGGUNAKAN window.SCRIPT_URL secara langsung
-                const res = await fetch(window.SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    body: JSON.stringify({
-                        action: "add",
-                        sheetName: SHEET_NAME,
-                        data: { Username: item.username, Role: item.role }
-                    })
-                });
-                
-                await db.users.update(item.id, { sync_status: 1 });
-            } catch (e) {
-                console.error("Sync Error:", e);
-            }
-        }
+    request.onsuccess = (e) => {
+        db = e.target.result;
         renderLocalTable();
-        $('#sync-status').text("Status: Sinkronisasi Selesai");
-    }
+    };
 
-    // 3. Tambah User (Offline-First)
-    async function addUser() {
-        const user = {
-            username: $('#u_name').val(),
-            role: $('#u_role').val(),
-            sync_status: 0 // Default pending
-        };
+    // Fungsi Tambah Data (Native)
+    function addUser() {
+        const username = document.getElementById('u_name').value;
+        const role = document.getElementById('u_role').value;
 
-        if(!user.username) return alert("Isi username!");
+        if(!username) return alert("Isi username!");
 
-        await db.users.add(user);
-        $('#modalUser').modal('hide');
-        renderLocalTable();
+        const transaction = db.transaction([STORE_NAME], "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
         
-        // Coba sync jika online
-        if(navigator.onLine) syncDataToCloud();
+        store.add({ username, role, sync_status: 0 });
+
+        transaction.oncomplete = () => {
+            document.getElementById('u_name').value = "";
+            userModal.hide();
+            renderLocalTable();
+            if(navigator.onLine) syncDataToCloud();
+        };
     }
 
-    // 4. Engine Sinkronisasi (PWA Power)
+    // Fungsi Render Tabel (Native)
+    function renderLocalTable() {
+        const $tbody = document.getElementById('user-table-body');
+        $tbody.innerHTML = "";
+
+        const transaction = db.transaction([STORE_NAME], "readonly");
+        const store = transaction.objectStore(STORE_NAME);
+        const cursorRequest = store.openCursor();
+
+        cursorRequest.onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+                const u = cursor.value;
+                const statusIcon = u.sync_status === 1 
+                    ? '<span class="badge bg-success-subtle text-success small">Synced</span>' 
+                    : '<span class="badge bg-warning-subtle text-warning small">Pending Sync</span>';
+
+                $tbody.innerHTML += `
+                    <tr class="border-bottom border-secondary border-opacity-10">
+                        <td class="ps-4 py-3 fw-medium text-white">${u.username}</td>
+                        <td>${u.role}</td>
+                        <td>${statusIcon}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm text-danger border-0" onclick="deleteUser(${u.id})">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                cursor.continue();
+            }
+        };
+    }
+
+    // Fungsi Sync ke Cloud (Native Fetch)
     async function syncDataToCloud() {
         if(!navigator.onLine) return;
 
-        const pendingData = await db.users.where("sync_status").equals(0).toArray();
-        if(pendingData.length === 0) {
-            $('#sync-status').text("Status: Terkoneksi & Sinkron");
-            return;
-        }
+        const transaction = db.transaction([STORE_NAME], "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        const cursorRequest = store.openCursor();
 
-        $('#sync-status').text(`Status: Menyinkronkan ${pendingData.length} data...`);
+        document.getElementById('sync-status').innerText = "Status: Sinkronisasi...";
 
-        for(let item of pendingData) {
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Untuk menghindari masalah CORS pada Google Script
-                    body: JSON.stringify({
-                        action: "add",
-                        sheetName: SHEET_NAME,
-                        data: { Username: item.username, Role: item.role }
-                    })
-                });
-                
-                // Update status di lokal setelah berhasil kirim
-                await db.users.update(item.id, { sync_status: 1 });
-            } catch (e) {
-                console.error("Sync Error:", e);
+        cursorRequest.onsuccess = async (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+                const item = cursor.value;
+                if (item.sync_status === 0) {
+                    try {
+                        await fetch(window.SCRIPT_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: "add",
+                                sheetName: "Users",
+                                data: { Username: item.username, Role: item.role }
+                            })
+                        });
+                        
+                        // Update status sync secara native
+                        const updateData = item;
+                        updateData.sync_status = 1;
+                        cursor.update(updateData);
+                    } catch (err) { console.error(err); }
+                }
+                cursor.continue();
+            } else {
+                renderLocalTable();
+                document.getElementById('sync-status').innerText = "Status: Terkoneksi";
             }
-        }
-        renderLocalTable();
-        $('#sync-status').text("Status: Sinkronisasi Selesai");
+        };
     }
 
-    // 5. Hapus User
-    async function deleteUser(localId, username) {
-        if(confirm(`Hapus ${username}?`)) {
-            await db.users.delete(localId);
-            // Tambahkan logika hapus di cloud jika perlu
-            renderLocalTable();
+    // Hapus Data (Native)
+    function deleteUser(id) {
+        if(confirm("Hapus user ini dari lokal?")) {
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            transaction.objectStore(STORE_NAME).delete(id);
+            transaction.oncomplete = () => renderLocalTable();
         }
     }
-
-    // Auto sync saat koneksi kembali online
-    window.addEventListener('online', syncDataToCloud);
-    
-    // Muat data awal
-    renderLocalTable();
-    syncDataToCloud();
-
 </script>
