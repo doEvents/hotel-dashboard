@@ -1,59 +1,71 @@
-<div class="container mt-4">
-    <h4>Manajemen User</h4>
-    <hr>
-    
-    <form id="userForm" class="mb-4">
-        <input type="hidden" id="userId">
-        <div class="row g-2">
-            <div class="col-md-3">
-                <input type="text" id="username" class="form-control form-control-sm" placeholder="Username" required>
-            </div>
-            <div class="col-md-3">
-                <input type="email" id="email" class="form-control form-control-sm" placeholder="Email" required>
-            </div>
-            <div class="col-md-2">
-                <input type="password" id="password" class="form-control form-control-sm" placeholder="Password" required>
-            </div>
-            <div class="col-md-2">
-                <select id="group" class="form-select form-select-sm" required>
-                    <option value="">Pilih Group</option>
-                    <option value="admin">Admin</option>
-                    <option value="supervisor">Supervisor</option>
-                    <option value="staf">Staf</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" id="btnSubmit" class="btn btn-sm btn-primary shadow-sm w-100">
-                    <i class="fas fa-plus"></i> Simpan User
-                </button>
+
+
+<div class="nebula-wrapper mt-4">
+    <div class="container-fluid">
+        <h4><i class="fas fa-atom me-2"></i>USER NEBULA CORE</h4>
+        <p class="text-muted small">Local Database System v1.0 (Encrypted)</p>
+        
+        <div class="nebula-card mb-4">
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="small text-muted">Username</label>
+                        <input type="text" id="username" class="form-control form-control-sm" placeholder="Enter username" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="small text-muted">Email Address</label>
+                        <input type="email" id="email" class="form-control form-control-sm" placeholder="user@nebula.com" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small text-muted">Access Key</label>
+                        <input type="password" id="password" class="form-control form-control-sm" placeholder="Password" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small text-muted">Rank Group</label>
+                        <select id="group" class="form-select form-select-sm" required>
+                            <option value="">Choose...</option>
+                            <option value="admin">Admin</option>
+                            <option value="supervisor">Supervisor</option>
+                            <option value="staf">Staf</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" id="btnSubmit" class="btn btn-sm btn-primary shadow-sm w-100 py-2">
+                            <i class="fas fa-plus-circle me-1"></i> SIMPAN USER
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="nebula-card">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>IDENTIFIER</th>
+                            <th>EMAIL</th>
+                            <th>SECURITY HASH</th>
+                            <th>RANK</th>
+                            <th class="text-center">OPERATIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        </tbody>
+                </table>
             </div>
         </div>
-    </form>
-
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover table-sm">
-            <thead class="table-light">
-                <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Password (Hash)</th>
-                    <th>Group</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="userTableBody">
-                </tbody>
-        </table>
     </div>
 </div>
 
 <script>
-    const dbName = "UserDB";
+    const dbName = "NebulaDB";
     const storeName = "users";
     let db;
 
-    // 1. Inisialisasi Database
-    const request = indexedDB.open(dbName, 1);
+    // Initialize IndexedDB
+    const request = indexedDB.open(dbName, 2);
 
     request.onupgradeneeded = (e) => {
         db = e.target.result;
@@ -67,7 +79,7 @@
         displayData();
     };
 
-    // 2. Fungsi Enkripsi Password (SHA-256 Hashing)
+    // SHA-256 Hashing Function
     async function hashPassword(password) {
         const msgUint8 = new TextEncoder().encode(password);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -75,7 +87,7 @@
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // 3. Tambah atau Update Data
+    // Handle Form Submit
     document.getElementById('userForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -85,9 +97,7 @@
         const password = document.getElementById('password').value;
         const group = document.getElementById('group').value;
 
-        // Enkripsi password sebelum disimpan
         const hashedPassword = await hashPassword(password);
-
         const transaction = db.transaction([storeName], "readwrite");
         const store = transaction.objectStore(storeName);
 
@@ -107,24 +117,27 @@
         };
     });
 
-    // 4. Tampilkan Data
+    // Display Function
     function displayData() {
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = '';
 
-        const store = db.transaction(storeName).objectStore(storeName);
+        const transaction = db.transaction(storeName, "readonly");
+        const store = transaction.objectStore(storeName);
+
         store.openCursor().onsuccess = (e) => {
             const cursor = e.target.result;
             if (cursor) {
+                const u = cursor.value;
                 const row = `
                     <tr>
-                        <td>${cursor.value.username}</td>
-                        <td>${cursor.value.email}</td>
-                        <td><small class="text-muted">${cursor.value.password.substring(0, 10)}...</small></td>
-                        <td><span class="badge bg-secondary">${cursor.value.group}</span></td>
-                        <td>
-                            <button onclick="editUser(${cursor.value.id})" class="btn btn-xs btn-warning py-0 px-1">Edit</button>
-                            <button onclick="deleteUser(${cursor.value.id})" class="btn btn-xs btn-danger py-0 px-1">Hapus</button>
+                        <td class="fw-bold text-info">${u.username}</td>
+                        <td>${u.email}</td>
+                        <td><code>${u.password.substring(0, 12)}...</code></td>
+                        <td><span class="badge rounded-pill bg-dark border border-secondary">${u.group}</span></td>
+                        <td class="text-center">
+                            <button onclick="editUser(${u.id})" class="btn btn-sm btn-outline-warning py-0">Edit</button>
+                            <button onclick="deleteUser(${u.id})" class="btn btn-sm btn-outline-danger py-0">Delete</button>
                         </td>
                     </tr>
                 `;
@@ -134,26 +147,22 @@
         };
     }
 
-    // 5. Edit Data
+    // Edit Function
     window.editUser = (id) => {
-        const transaction = db.transaction([storeName], "readonly");
-        const store = transaction.objectStore(storeName);
-        const request = store.get(id);
-
-        request.onsuccess = () => {
-            const user = request.result;
+        const store = db.transaction([storeName], "readonly").objectStore(storeName);
+        store.get(id).onsuccess = (e) => {
+            const user = e.target.result;
             document.getElementById('userId').value = user.id;
             document.getElementById('username').value = user.username;
             document.getElementById('email').value = user.email;
             document.getElementById('group').value = user.group;
-            // Password tidak dimuat balik karena sudah di-hash
-            document.getElementById('password').placeholder = "Masukkan password baru";
+            document.getElementById('password').placeholder = "Re-enter to update";
         };
     };
 
-    // 6. Hapus Data
+    // Delete Function
     window.deleteUser = (id) => {
-        if (confirm('Hapus user ini?')) {
+        if (confirm('Erase this user from Nebula Core?')) {
             const transaction = db.transaction([storeName], "readwrite");
             transaction.objectStore(storeName).delete(id);
             transaction.oncomplete = () => displayData();
