@@ -180,11 +180,11 @@
     <nav class="sidebar shadow-lg" id="sidebar">
         <button class="btn text-white mb-4 bg-transparent border-0 d-none d-md-block" id="btn-toggle-desktop"><i class="bi bi-grid-fill fs-4"></i></button>
         <div class="mt-md-0 mt-5">
-            <a href="#" class="nav-item shortcut active" data-url="modules/app_dashboard.html"><i class="bi bi-house-door-fill"></i><span>Dashboard</span></a>
-            <a href="#" class="nav-item shortcut" data-url="modules/app_master_menu.html"><i class="bi bi-database-fill"></i><span>Master</span></a>
-            <a href="#" class="nav-item shortcut" data-url="modules/statistik.html"><i class="bi bi-bar-chart-line-fill"></i><span>Statistik</span></a>
-            <a href="#" class="nav-item shortcut" data-url="modules/pegawai.html"><i class="bi bi-person-plus-fill"></i><span>Pegawai</span></a>
-            <a href="#" class="nav-item shortcut" data-url="modules/admin_menu.html"><i class="bi bi-people-fill"></i><span>Users & Sync</span></a>
+            <a href="#" class="nav-item shortcut active" data-url="app_dashboard.html"><i class="bi bi-house-door-fill"></i><span>Dashboard</span></a>
+            <a href="#" class="nav-item shortcut" data-url="app_master_menu.html"><i class="bi bi-database-fill"></i><span>Master</span></a>
+            <a href="#" class="nav-item shortcut" data-url="statistik.html"><i class="bi bi-bar-chart-line-fill"></i><span>Statistik</span></a>
+            <a href="#" class="nav-item shortcut" data-url="pegawai.html"><i class="bi bi-person-plus-fill"></i><span>Pegawai</span></a>
+            <a href="#" class="nav-item shortcut" data-url="admin_menu.html"><i class="bi bi-people-fill"></i><span>Users & Sync</span></a>
         </div>
         <div class="mt-auto">
             <a href="#" class="nav-item"><i class="bi bi-gear-fill"></i><span>Setelan</span></a>
@@ -281,12 +281,12 @@
 
             if (!auth || !auth.isLoggedIn) {
                 // Jika belum login, paksa load halaman login
-                window.loadPage('modules/admin_login.html', null);
+                window.loadPage('admin_login.html', null);
                 $('.sidebar, .top-right, .btn-bottom').remove(); // Sembunyikan UI dashboard
             } else {
                 // Jika sudah login, tampilkan dashboard
                 $('.sidebar, .top-right, .btn-bottom').show();
-                loadPage('modules/app_dashboard.html', $('.nav-item.active'));
+                loadPage('app_dashboard.html', $('.nav-item.active'));
                 $('#user-name-display').text(auth.username);
                 $('#user-role-display').text(auth.group);
                 const avatarUrl = `https://ui-avatars.com/api/?name=${auth.username}&background=a855f7&color=fff&bold=true`;
