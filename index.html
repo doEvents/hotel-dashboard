@@ -3,133 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nebula User Management</title>
+    <title>User Management System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --nebula-bg: #0b0e14;
-            --nebula-card: rgba(255, 255, 255, 0.05);
-            --nebula-accent: #7d5fff;
-            --nebula-text: #e0e0e0;
-            --nebula-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #4f46e5;
+            --bg-body: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         body {
-            background-color: var(--nebula-bg);
-            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0b0e14 100%);
-            color: var(--nebula-text);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.01em;
         }
 
-        h2 { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--nebula-accent); }
-
-        .glass-card {
-            background: var(--nebula-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--nebula-border);
-            border-radius: 15px;
-            padding: 2rem;
+        .main-container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
         }
 
-        .table { color: var(--nebula-text); border-color: var(--nebula-border); }
-        .table thead { background: rgba(125, 95, 255, 0.2); }
+        /* Card Style */
+        .content-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
 
+        /* Table Aesthetics */
+        .table {
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+        .table thead {
+            background-color: #f1f5f9;
+        }
+        .table thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .table tbody td {
+            padding: 1rem 1.5rem;
+            color: var(--text-main);
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* Badge Style */
+        .badge-group {
+            padding: 0.4em 0.8em;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+        .bg-staf { background: #e0f2fe; color: #0369a1; }
+        .bg-admin { background: #fef3c7; color: #92400e; }
+        .bg-supervisor { background: #dcfce7; color: #166534; }
+
+        /* Form Controls */
+        .form-label { font-weight: 500; font-size: 0.875rem; color: var(--text-main); }
         .form-control, .form-select {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid var(--nebula-border);
-            color: #fff;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
         }
-
         .form-control:focus {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border-color: var(--nebula-accent);
-            box-shadow: 0 0 10px rgba(125, 95, 255, 0.5);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
         }
 
-        .modal-content {
-            background: #151921;
-            border: 1px solid var(--nebula-accent);
-            color: white;
+        /* Smooth Transitions */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Sync animation */
-        .sync-loading { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* Button Custom */
+        .btn-sync {
+            background: #fff;
+            border: 1px solid #d1d5db;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+        .btn-sync:hover { background: #f9fafb; border-color: #9ca3af; }
     </style>
 </head>
 <body>
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+<div class="main-container fade-in">
+    <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h2>NEBULA <span style="color: #fff;">USERS</span></h2>
-            <p class="text-muted small">Universal Sync: IndexedDB & Google Sheets</p>
+            <h4 class="fw-bold mb-1">Daftar Pengguna</h4>
+            <p class="text-muted small mb-0">Kelola data user dan sinkronisasi otomatis ke Cloud.</p>
         </div>
-        <div>
-            <button class="btn btn-sm btn-outline-info shadow-sm me-2" onclick="syncData()" id="syncBtn">
-                🔄 Sync Cloud
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-sync shadow-sm px-3" onclick="syncData()" id="syncBtn">
+                Sync ke Sheets
             </button>
-            <button class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#userModal">
+            <button class="btn btn-sm btn-primary shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#userModal">
                 + Tambah User
             </button>
         </div>
     </div>
 
-    <div class="glass-card shadow-lg">
+    <div class="content-card">
         <div class="table-responsive">
-            <table class="table table-hover mt-3">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>Username</th>
                         <th>Email</th>
-                        <th>Group</th>
-                        <th class="text-center">Aksi</th>
+                        <th>Akses Grup</th>
+                        <th class="text-end">Opsi</th>
                     </tr>
                 </thead>
-                <tbody id="userTableBody" class="align-middle">
+                <tbody id="userTableBody">
                     </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="userModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content shadow-lg">
-            <div class="modal-header border-0">
-                <h5 class="modal-title font-orbitron">DATA USER</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="fw-bold">Tambah Pengguna Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body px-4 pb-4">
                 <form id="userForm">
                     <input type="hidden" id="userId">
                     <div class="mb-3">
-                        <label class="form-label small">Username</label>
-                        <input type="text" id="username" class="form-control" placeholder="Masukkan username" required>
+                        <label class="form-label">Username</label>
+                        <input type="text" id="username" class="form-control" placeholder="Contoh: budi.santoso" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="email@nebula.com" required>
+                        <label class="form-label">Alamat Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="budi@perusahaan.com" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Password</label>
+                        <label class="form-label">Password</label>
                         <input type="password" id="password" class="form-control" placeholder="••••••••" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small">Group Access</label>
+                    <div class="mb-4">
+                        <label class="form-label">Grup</label>
                         <select id="group" class="form-select">
-                            <option value="staf">Staf</option>
-                            <option value="admin">Admin</option>
+                            <option value="staf">Staf Operasional</option>
+                            <option value="admin">Administrator</option>
                             <option value="supervisor">Supervisor</option>
                         </select>
                     </div>
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-primary w-100 shadow-sm">Simpan Data</button>
-                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 10px;">Simpan Perubahan</button>
                 </form>
             </div>
         </div>
@@ -140,63 +181,51 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <script>
-    // --- CONFIGURATION ---
+    // Konfigurasi Universal
     const CONFIG = {
-        GAS_URL: "https://script.google.com/macros/s/AKfycbwpaQu0blsj9zZStq3XIxRv1u186zSqXEY-ocTq2pWo2n76sc6xwrd-asqfOfxlgo3V/exec", // Ganti dengan URL Deployment Anda
-        SHEET_NAME: "Users_Data", // Hanya menyebutkan nama sheet di sini
-        SECRET_KEY: "nebula-core-encryption"
+        GAS_URL: "https://script.google.com/macros/s/AKfycbwpaQu0blsj9zZStq3XIxRv1u186zSqXEY-ocTq2pWo2n76sc6xwrd-asqfOfxlgo3V/exec", // GANTI INI
+        SHEET_NAME: "Master_Users",
+        KEY: "secure-key-123"
     };
 
     let db;
-    const request = indexedDB.open("NebulaDB", 1);
+    const req = indexedDB.open("ManagementDB", 1);
 
-    request.onupgradeneeded = (e) => {
+    req.onupgradeneeded = (e) => {
         db = e.target.result;
-        if (!db.objectStoreNames.contains("users")) {
-            db.createObjectStore("users", { keyPath: "id" });
-        }
+        db.createObjectStore("users", { keyPath: "id" });
     };
 
-    request.onsuccess = (e) => {
+    req.onsuccess = (e) => {
         db = e.target.result;
         renderTable();
     };
 
-    // --- ENCRYPTION HELPER ---
-    const encrypt = (text) => CryptoJS.AES.encrypt(text, CONFIG.SECRET_KEY).toString();
-    const decrypt = (text) => {
-        try {
-            return CryptoJS.AES.decrypt(text, CONFIG.SECRET_KEY).toString(CryptoJS.enc.Utf8);
-        } catch(e) { return "Encrypted"; }
-    };
+    const encrypt = (val) => CryptoJS.AES.encrypt(val, CONFIG.KEY).toString();
 
-    // --- UI RENDERING ---
     async function renderTable() {
         const tx = db.transaction("users", "readonly");
-        const store = tx.objectStore("users");
         const users = await new Promise(res => {
-            store.getAll().onsuccess = (e) => res(e.target.result);
+            tx.objectStore("users").getAll().onsuccess = (e) => res(e.target.result);
         });
 
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = users.map(u => `
             <tr>
-                <td class="fw-bold">${u.username}</td>
-                <td>${u.email}</td>
-                <td><span class="badge bg-dark border border-info">${u.group.toUpperCase()}</span></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.id}')">Hapus</button>
+                <td class="fw-medium">${u.username}</td>
+                <td class="text-muted">${u.email}</td>
+                <td><span class="badge-group bg-${u.group}">${u.group.toUpperCase()}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-link btn-sm text-danger p-0" onclick="deleteUser('${u.id}')">Hapus</button>
                 </td>
             </tr>
-        `).join('') || '<tr><td colspan="4" class="text-center text-muted">Belum ada data.</td></tr>';
+        `).join('') || '<tr><td colspan="4" class="text-center py-5 text-muted small">Belum ada data tersedia.</td></tr>';
     }
 
-    // --- LOCAL CRUD ---
     document.getElementById('userForm').onsubmit = (e) => {
         e.preventDefault();
-        const id = document.getElementById('userId').value || "UID-" + Date.now();
-        const userData = {
-            id,
+        const user = {
+            id: document.getElementById('userId').value || "ID" + Date.now(),
             username: document.getElementById('username').value,
             email: document.getElementById('email').value,
             password: encrypt(document.getElementById('password').value),
@@ -204,7 +233,7 @@
         };
 
         const tx = db.transaction("users", "readwrite");
-        tx.objectStore("users").put(userData);
+        tx.objectStore("users").put(user);
         tx.oncomplete = () => {
             document.getElementById('userForm').reset();
             bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
@@ -213,59 +242,56 @@
     };
 
     function deleteUser(id) {
-        if(!confirm("Hapus user ini?")) return;
+        if(!confirm("Hapus pengguna ini?")) return;
         const tx = db.transaction("users", "readwrite");
         tx.objectStore("users").delete(id);
         tx.oncomplete = () => renderTable();
     }
 
-    // --- 2-WAY UNIVERSAL SYNC ---
+    // Universal Sync Function
     async function syncData() {
         const btn = document.getElementById('syncBtn');
-        btn.classList.add('disabled');
-        btn.innerHTML = '⌛ Syncing...';
+        const originalText = btn.innerText;
+        btn.innerText = "Processing...";
+        btn.disabled = true;
 
         try {
-            // Step 1: Tarik data dari Cloud (READ)
-            const getResp = await fetch(CONFIG.GAS_URL, {
+            // 1. Ambil data dari Sheets
+            const get = await fetch(CONFIG.GAS_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: 'READ', sheetName: CONFIG.SHEET_NAME })
             });
-            const cloudData = await getResp.json();
+            const cloudData = await get.json();
 
-            // Step 2: Merge ke IndexedDB (Update Local)
+            // 2. Gabungkan ke Local
             const tx = db.transaction("users", "readwrite");
-            const store = tx.objectStore("users");
-            cloudData.forEach(item => store.put(item));
+            cloudData.forEach(item => tx.objectStore("users").put(item));
 
             tx.oncomplete = async () => {
-                // Step 3: Ambil kondisi Final dari Local
-                const finalLocal = await new Promise(res => {
+                // 3. Kirim balik semua data terbaru ke Sheets
+                const localData = await new Promise(res => {
                     db.transaction("users").objectStore("users").getAll().onsuccess = (e) => res(e.target.result);
                 });
 
-                // Step 4: Timpa Cloud dengan Final Local (SYNC_ALL)
                 await fetch(CONFIG.GAS_URL, {
                     method: "POST",
                     body: JSON.stringify({ 
                         action: 'SYNC_ALL', 
                         sheetName: CONFIG.SHEET_NAME, 
-                        payload: finalLocal 
+                        payload: localData 
                     })
                 });
 
-                alert("Sinkronisasi 2-Arah Berhasil!");
                 renderTable();
+                alert("Sinkronisasi Selesai.");
             };
         } catch (err) {
-            console.error(err);
-            alert("Gagal sinkron. Pastikan URL GAS benar & CORS diizinkan.");
+            alert("Koneksi gagal. Cek URL Google Script.");
         } finally {
-            btn.classList.remove('disabled');
-            btn.innerHTML = '🔄 Sync Cloud';
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
     }
 </script>
-
 </body>
 </html>
