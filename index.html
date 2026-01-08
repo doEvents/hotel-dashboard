@@ -250,8 +250,19 @@
                     $sidebar.removeClass('mobile-show');
                     $('#common-overlay').fadeOut();
                 }
-                
-                const nwurl = url + '?v='+app_version;
+
+
+				var dev_token = "";
+				if(dev)
+					dev_token = Date.now(); 
+
+    
+			    // 2. Buat URL dengan pemisah yang benar (?v=...&t=...)
+			    // Kita tambahkan &t= untuk memastikan browser menganggap ini request baru
+			    const nwurl = url + '?v=' + app_version + '&t=' + dev_token;
+
+				
+                // const nwurl = url + '?v='+app_version+iddev;
                 
                 //alert(dev);
 
