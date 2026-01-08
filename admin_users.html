@@ -10,7 +10,7 @@
 
     /* Modal Styling */
     .modal-content {
-        background-color: #111622; /* Solid Nebula Deep */
+        background-color: #111622; 
         border: 1px solid var(--border-color);
         border-radius: 24px;
         color: var(--text-main);
@@ -32,7 +32,6 @@
         border: 1px solid var(--border-color) !important;
         color: var(--text-main) !important;
         border-radius: 12px;
-        /* Custom arrow untuk dark mode */
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
     }
 
@@ -89,8 +88,7 @@
                         <th class="text-end">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="userTableBody">
-                    </tbody>
+                <tbody id="userTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -108,15 +106,15 @@
                     <input type="hidden" id="userId">
                     <div class="mb-3">
                         <label class="form-label">USERNAME</label>
-                        <input type="text" id="username" class="form-control" placeholder="Input username" required>
+                        <input type="text" id="username" class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">EMAIL ADDRESS</label>
-                        <input type="email" id="email" class="form-control" placeholder="email@nebula.com" required>
+                        <input type="email" id="email" class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">ACCESS PASSWORD</label>
-                        <input type="password" id="password" class="form-control" placeholder="Secure password">
+                        <input type="password" id="password" class="form-control">
                         <small id="passHelp" class="text-muted" style="font-size: 10px;"></small>
                     </div>
                     <div class="mb-3">
@@ -131,9 +129,7 @@
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold">
-                        <i class="bi bi-shield-lock-fill me-1"></i> Simpan User
-                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold">Simpan User</button>
                 </div>
             </form>
         </div>
@@ -141,41 +137,48 @@
 </div>
 
 <script>
-    var dbName = window.DB_NAME;
-    var storeName = "users"; // Sesuai permintaan Anda
+    // FIX: Gunakan fallback jika window.DB_NAME belum didefinisikan
+    var dbName = window.app_name || "NebulaCoreDB";
+    var storeName = "users";
     var db;
     var userModal = new bootstrap.Modal(document.getElementById('userModal'));
 
-    // Database Initialization
-    var request = indexedDB.open(dbName, 1);
+    // FIX: Naikkan versi ke 2 untuk memaksa pembuatan tabel 'users'
+    var request = indexedDB.open(dbName, 2);
+
     request.onupgradeneeded = (e) => {
-        db = e.target.result;
-        if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+        var dbInstance = e.target.result;
+        console.log("Upgrading Database...");
+        if (!dbInstance.objectStoreNames.contains(storeName)) {
+            dbInstance.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+            console.log("Store 'users' created.");
         }
     };
-    request.onsuccess = (e) => { 
-        db = e.target.result; 
-        loadUsers(); 
+
+    request.onsuccess = (e) => {
+        db = e.target.result;
+        console.log("Database Connection Success.");
+        loadUsers();
     };
 
-    // Password Hashing SHA-256
+    request.onerror = (e) => {
+        console.error("Database Error:", e.target.errorCode);
+    };
+
     async function hashPassword(password) {
         const msgUint8 = new TextEncoder().encode(password);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
         return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Modal Helper
     function openUserModal() {
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
         document.getElementById('password').required = true;
-        document.getElementById('passHelp').innerText = "Password akan di-hash menggunakan SHA-256";
+        document.getElementById('passHelp').innerText = "Password akan di-hash SHA-256";
         userModal.show();
     }
 
-    // CRUD: Save (Add/Update)
     document.getElementById('userForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('userId').value;
@@ -195,7 +198,6 @@
             if (passVal) {
                 userData.password = await hashPassword(passVal);
             } else {
-                // Ambil password lama jika tidak diubah
                 const existing = await new Promise(res => {
                     store.get(userData.id).onsuccess = (ev) => res(ev.target.result);
                 });
@@ -213,11 +215,18 @@
         };
     };
 
-    // CRUD: Read
     function loadUsers() {
+        // FIX: Tambahkan pengecekan store sebelum transaksi
+        if (!db.objectStoreNames.contains(storeName)) {
+            console.warn("Store not found yet. Database might be updating.");
+            return;
+        }
+
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = '';
-        const store = db.transaction(storeName, "readonly").objectStore(storeName);
+        const transaction = db.transaction(storeName, "readonly");
+        const store = transaction.objectStore(storeName);
+
         store.openCursor().onsuccess = (e) => {
             const cursor = e.target.result;
             if (cursor) {
@@ -227,20 +236,17 @@
                         <td class="fw-bold text-white">${u.username}</td>
                         <td class="text-muted small">${u.email}</td>
                         <td><span class="user-badge">${u.group}</span></td>
-                        <td><code class="text-info" style="font-size: 10px;">${u.password.substring(0, 12)}...</code></td>
+                        <td><code class="text-info" style="font-size: 10px;">${u.password.substring(0, 10)}...</code></td>
                         <td class="text-end">
                             <button onclick="editUser(${u.id})" class="btn btn-sm btn-outline-info border-0"><i class="bi bi-pencil-square"></i></button>
                             <button onclick="deleteUser(${u.id})" class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash3"></i></button>
                         </td>
                     </tr>`;
                 cursor.continue();
-            } else if (!tbody.innerHTML) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Empty database.</td></tr>';
             }
         };
     }
 
-    // CRUD: Edit
     window.editUser = (id) => {
         db.transaction(storeName).objectStore(storeName).get(id).onsuccess = (e) => {
             const u = e.target.result;
@@ -249,12 +255,11 @@
             document.getElementById('email').value = u.email;
             document.getElementById('group').value = u.group;
             document.getElementById('password').required = false;
-            document.getElementById('passHelp').innerText = "Biarkan kosong jika tidak ingin mengubah password";
+            document.getElementById('passHelp').innerText = "Kosongkan jika tidak ingin ganti password";
             userModal.show();
         };
     };
 
-    // CRUD: Delete
     window.deleteUser = (id) => {
         if (confirm('Hapus user ini?')) {
             db.transaction(storeName, "readwrite").objectStore(storeName).delete(id).oncomplete = () => loadUsers();
