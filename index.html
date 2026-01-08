@@ -279,19 +279,19 @@
             
             const auth = JSON.parse(localStorage.getItem('nebula_auth'));
 
-            if (!auth || !auth.isLoggedIn) {
-                // Jika belum login, paksa load halaman login
-                window.loadPage('admin_login.html', null);
-                $('.sidebar, .top-right, .btn-bottom').remove(); // Sembunyikan UI dashboard
-            } else {
-                // Jika sudah login, tampilkan dashboard
-                $('.sidebar, .top-right, .btn-bottom').show();
-                loadPage('app_dashboard.html', $('.nav-item.active'));
-                $('#user-name-display').text(auth.username);
-                $('#user-role-display').text(auth.group);
-                const avatarUrl = `https://ui-avatars.com/api/?name=${auth.username}&background=a855f7&color=fff&bold=true`;
-        		$('#user-avatar').attr('src', avatarUrl);
-            }
+          //   if (!auth || !auth.isLoggedIn) {
+          //       // Jika belum login, paksa load halaman login
+          //       window.loadPage('admin_login.html', null);
+          //       $('.sidebar, .top-right, .btn-bottom').remove(); // Sembunyikan UI dashboard
+          //   } else {
+          //       // Jika sudah login, tampilkan dashboard
+          //       $('.sidebar, .top-right, .btn-bottom').show();
+          //       loadPage('app_dashboard.html', $('.nav-item.active'));
+          //       $('#user-name-display').text(auth.username);
+          //       $('#user-role-display').text(auth.group);
+          //       const avatarUrl = `https://ui-avatars.com/api/?name=${auth.username}&background=a855f7&color=fff&bold=true`;
+        		// $('#user-avatar').attr('src', avatarUrl);
+          //   }
             
             // 2. Logika Toggle Dropdown (Manual jika tidak pakai Bootstrap JS)
             $('#profile-trigger').on('click', function(e) {
