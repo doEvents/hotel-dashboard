@@ -1,23 +1,33 @@
 <script>
-    // Security check: Memastikan file di-load melalui sistem main-container
-    //if (typeof window.loadPage === 'undefined') window.location.href = '';
+    // Security check
+    //if (typeof window.loadPage === 'undefined') window.location.href = 'index.php';
 </script>
 
 <style>
     .nebula-muted { color: #8694a8 !important; }
     .form-label { color: #8694a8; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
     .settings-card { background: #111622; border: 1px solid rgba(255,255,255,0.08); }
+    
+    /* Status Pill Styling */
+    .status-pill { font-size: 10px; padding: 2px 10px; border-radius: 20px; font-weight: 700; letter-spacing: 0.5px; }
+    .sync-0 { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
+    .sync-1 { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+
     .spin { animation: fa-spin 1s infinite linear; }
     @keyframes fa-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    
-    /* Custom Scrollbar for Table */
-    .table-responsive::-webkit-scrollbar { height: 4px; }
-    .table-responsive::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-    /* Form control focus effect */
+    /* Table Adjustments */
+    .table-dark { --bs-table-bg: transparent; }
+    .table-hover tbody tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .form-control, .form-select {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+    }
     .form-control:focus, .form-select:focus {
         border-color: #6366f1 !important;
-        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
+        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.2) !important;
     }
 </style>
 
@@ -26,11 +36,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold mb-0 text-white">Database User</h4>
-            <small id="sync-indicator" class="nebula-muted">Sinkronisasi otomatis aktif</small>
+            <small id="sync-indicator" class="nebula-muted">Sinkronisasi Cloud Aktif</small>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-sm btn-outline-secondary shadow-sm px-3 rounded-pill fw-bold text-white border-secondary border-opacity-50" id="btn-force-sync">
-                <i class="bi bi-cloud-download me-1"></i> FORCE SYNC
+                <i class="bi bi-cloud-arrow-down me-1"></i> FORCE SYNC
             </button>
             <button class="btn btn-sm btn-primary shadow-sm px-3 rounded-pill fw-bold" id="btn-toggle-form">
                 <i class="bi bi-person-plus-fill me-1"></i> TAMBAH USER
@@ -41,35 +51,33 @@
     <div id="form-area" class="mb-4 p-4 rounded-4 border border-secondary border-opacity-25" style="display: none; background: rgba(255,255,255,0.01);">
         <h5 id="form-title" class="fw-bold mb-4 text-primary">Input User Baru</h5>
         <input type="hidden" id="f_id">
-        
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">USERNAME</label>
-                <input type="text" id="f_user" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="Username unik">
+                <input type="text" id="f_user" class="form-control form-control-sm" placeholder="Username unik">
             </div>
             <div class="col-md-6">
                 <label class="form-label">EMAIL ADDRESS</label>
-                <input type="email" id="f_email" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="email@nebula.com">
+                <input type="email" id="f_email" class="form-control form-control-sm" placeholder="email@nebula.com">
             </div>
             <div class="col-md-6">
                 <label class="form-label">PASSWORD</label>
-                <input type="password" id="f_pass" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="Min. 6 karakter">
+                <input type="password" id="f_pass" class="form-control form-control-sm" placeholder="Masukkan password">
                 <small id="f_pass_note" class="text-warning mt-1" style="display:none; font-size: 10px;">* Kosongkan jika tidak ingin ganti password</small>
             </div>
             <div class="col-md-6">
                 <label class="form-label">LEVEL AKSES</label>
-                <select id="f_group" class="form-select form-select-sm bg-dark text-white border-secondary">
+                <select id="f_group" class="form-select form-select-sm">
                     <option value="staf">Staf</option>
                     <option value="supervisor">Supervisor</option>
                     <option value="admin">Admin</option>
                 </select>
             </div>
         </div>
-
         <div class="d-flex justify-content-end gap-2 mt-4">
-            <button class="btn btn-sm btn-outline-secondary px-4 rounded-pill border-opacity-25 nebula-muted" id="btn-cancel">Batal</button>
+            <button class="btn btn-sm btn-outline-secondary px-4 rounded-pill nebula-muted border-opacity-25" id="btn-cancel">Batal</button>
             <button class="btn btn-sm btn-primary shadow-sm px-4 rounded-pill fw-bold" id="btn-save">
-                <i class="bi bi-cloud-arrow-up me-2"></i> <span id="btn-save-text">Simpan User Baru</span>
+                <i class="bi bi-cloud-arrow-up me-2"></i> <span id="btn-save-text">Simpan User</span>
             </button>
         </div>
     </div>
@@ -80,21 +88,22 @@
                 <tr>
                     <th>PROFIL USER</th>
                     <th>ROLE</th>
-                    <th class="text-center">STATUS</th>
+                    <th class="text-center">SYNC</th>
                     <th class="text-end">OPSI</th>
                 </tr>
             </thead>
-            <tbody id="user_table_body" style="font-size: 13px; border-top: transparent;">
-                </tbody>
+            <tbody id="user_table_body" style="font-size: 13px;"></tbody>
         </table>
     </div>
 </div>
 
+
+
 <script>
-    var DB_NAME = window.DB_NAME;
+    var DB_NAME = window.app_name || 'Nebula_DB';
     var STORE_NAME = 'users';
 
-    // Password Hashing SHA-256
+    // 1. Password Hashing (SHA-256)
     async function hash(p) {
         if(!p) return '';
         const msg = new TextEncoder().encode(p);
@@ -102,49 +111,44 @@
         return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Database Init
+    // 2. Database Initialization
     function initDB() {
         return new Promise((resolve) => {
             const req = indexedDB.open(DB_NAME, 3);
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
-                if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
-                if (!db.objectStoreNames.contains('tipe_kamar')) db.createObjectStore('tipe_kamar', { keyPath: 'id' });
+                if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
             };
             req.onsuccess = (e) => resolve(e.target.result);
         });
     }
 
-    // Render Table From Local Data
+    // 3. Render Table
     async function renderTable() {
         const db = await initDB();
-        const transaction = db.transaction(STORE_NAME, "readonly");
-        const store = transaction.objectStore(STORE_NAME);
-        
-        store.getAll().onsuccess = (e) => {
+        db.transaction(STORE_NAME).objectStore(STORE_NAME).getAll().onsuccess = (e) => {
             const list = $('#user_table_body').empty();
-            const users = e.target.result.filter(u => u.deleted === 0);
+            const users = e.target.result.filter(u => u.deleted == 0);
             
             if (users.length === 0) {
-                list.append('<tr><td colspan="4" class="text-center p-5 nebula-muted">Data lokal kosong.</td></tr>');
+                list.append('<tr><td colspan="4" class="text-center p-5 nebula-muted">Database Lokal Kosong</td></tr>');
                 return;
             }
 
             users.sort((a,b) => b.updated_at - a.updated_at).forEach(u => {
+                const syncClass = u.synced ? 'sync-1' : 'sync-0';
+                const syncText = u.synced ? 'READY' : 'LOCAL';
                 list.append(`
                     <tr>
                         <td>
                             <div class="fw-bold text-white">${u.username}</div>
                             <div class="nebula-muted" style="font-size: 11px;">${u.email}</div>
                         </td>
-                        <td><span class="badge bg-secondary bg-opacity-25 text-white fw-normal p-2 px-3 rounded-pill" style="font-size: 10px;">${u.user_group.toUpperCase()}</span></td>
-                        <td class="text-center">
-                            <i class="bi bi-cloud-check-fill ${u.synced ? 'text-success' : 'text-warning'}" 
-                               title="${u.synced ? 'Tersinkron' : 'Belum Sinkron'}"></i>
-                        </td>
+                        <td><span class="badge bg-secondary bg-opacity-25 text-white fw-normal">${u.user_group.toUpperCase()}</span></td>
+                        <td class="text-center"><span class="status-pill ${syncClass}">${syncText}</span></td>
                         <td class="text-end">
-                            <button class="btn btn-sm text-info border-0 me-1" onclick="editMode('${u.id}')"><i class="bi bi-pencil-square fs-5"></i></button>
-                            <button class="btn btn-sm text-danger border-0" onclick="deleteMode('${u.id}')"><i class="bi bi-trash3 fs-5"></i></button>
+                            <button class="btn btn-sm text-info border-0 me-1" onclick="editMode('${u.id}')"><i class="bi bi-pencil-square fs-6"></i></button>
+                            <button class="btn btn-sm text-danger border-0" onclick="deleteMode('${u.id}')"><i class="bi bi-trash3 fs-6"></i></button>
                         </td>
                     </tr>
                 `);
@@ -152,10 +156,10 @@
         };
     }
 
-    // Sync Logic
+    // 4. Two-Way Universal Sync Logic
     async function syncData(isForce = false) {
-        if (!navigator.onLine) {
-            $('#sync-indicator').text('Offline Mode').css('color', '#fbbf24');
+        if (!navigator.onLine || !window.SCRIPT_URL) {
+            $('#sync-indicator').text('Offline / SCRIPT_URL missing').css('color', '#fbbf24');
             return;
         }
         
@@ -169,132 +173,117 @@
         });
 
         const localChanges = allData.filter(u => !u.synced);
-        let lastSyncTime = isForce ? 0 : (localStorage.getItem('last_sync_ts') || 0);
+        let lastSyncTime = isForce ? 0 : (localStorage.getItem('last_sync_users') || 0);
 
-        // AJAX ke app.php (Pastikan file ini ada di server Anda)
+        // Payload Universal
+        const payload = {
+            action: "sync",
+            sheetName: STORE_NAME,
+            syncData: {
+                localChanges: localChanges,
+                lastSyncTime: lastSyncTime
+            }
+        };
+
         $.ajax({
-            url: 'app.php', 
+            url: window.SCRIPT_URL,
             method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ localChanges, lastSyncTime }),
+            contentType: 'text/plain', // Hindari CORS preflight jika perlu
+            data: JSON.stringify(payload),
             success: async function(res) {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
+                if(res.status === "success") {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
 
-                if(res.serverChanges) {
-                    res.serverChanges.forEach(s => { s.synced = true; store.put(s); });
+                    // Server to Local
+                    if(res.serverChanges) {
+                        res.serverChanges.forEach(s => { s.synced = true; store.put(s); });
+                    }
+                    // Local to Server (Mark as synced)
+                    localChanges.forEach(l => { l.synced = true; store.put(l); });
+
+                    tx.oncomplete = () => {
+                        localStorage.setItem('last_sync_users', res.serverTime);
+                        $('#sync-indicator').text('Data Tersinkron').css('color', '#10b981');
+                        $icon.removeClass('spin');
+                        renderTable();
+                    };
                 }
-                localChanges.forEach(l => { l.synced = true; store.put(l); });
-
-                tx.oncomplete = () => {
-                    localStorage.setItem('last_sync_ts', res.serverTime || Date.now());
-                    $('#sync-indicator').text('Synced').css('color', '#10b981');
-                    if(isForce) $icon.removeClass('spin');
-                    renderTable();
-                };
             },
             error: () => {
-                if(isForce) $icon.removeClass('spin');
-                $('#sync-indicator').text('Sync Error').css('color', '#ef4444');
+                $('#sync-indicator').text('Gagal Sinkron').css('color', '#ef4444');
+                $icon.removeClass('spin');
             }
         });
     }
 
-    // Save Logic (Add & Update)
+    // 5. Save/Update Logic
     $('#btn-save').on('click', async function() {
-        const id = $('#f_id').val();
-        const u = $('#f_user').val();
-        const e = $('#f_email').val();
-        const p = $('#f_pass').val();
-        const g = $('#f_group').val();
-
-        if(!u || !e) return alert('Username dan Email wajib diisi!');
+        const id = $('#f_id').val(), u = $('#f_user').val(), e = $('#f_email').val(), p = $('#f_pass').val(), g = $('#f_group').val();
+        if(!u || !e) return alert('Data Username dan Email wajib diisi!');
 
         const db = await initDB();
         const isEdit = id !== "";
-        
-        let existing = null;
-        if(isEdit) {
-            existing = await new Promise(r => {
-                db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = ev => r(ev.target.result);
-            });
-        }
+        let existing = isEdit ? await new Promise(r => {
+            db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = ev => r(ev.target.result);
+        }) : null;
 
         const userData = {
             id: isEdit ? id : 'USR-' + Date.now(),
-            username: u,
-            email: e,
-            user_group: g,
+            username: u, email: e, user_group: g,
             password: p ? await hash(p) : (existing ? existing.password : ''),
-            updated_at: Date.now(),
-            deleted: 0,
-            synced: false
+            updated_at: Date.now(), deleted: 0, synced: false // New/Edited data always synced=false
         };
 
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).put(userData);
         tx.oncomplete = () => {
             $('#form-area').slideUp();
-            syncData(); // Trigger sync setelah simpan lokal
             renderTable();
+            syncData();
         };
     });
 
-    // Helper: Edit Mode
+    // 6. UI Helpers
     window.editMode = async (id) => {
         const db = await initDB();
         db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = (e) => {
             const u = e.target.result;
-            $('#f_id').val(u.id); 
-            $('#f_user').val(u.username); 
-            $('#f_email').val(u.email); 
-            $('#f_group').val(u.user_group);
-            $('#f_pass').val(''); 
-            $('#f_pass_note').show();
-            $('#form-title').text('Edit User Account'); 
-            $('#btn-save-text').text('Update Database');
+            $('#f_id').val(u.id); $('#f_user').val(u.username); $('#f_email').val(u.email); $('#f_group').val(u.user_group);
+            $('#f_pass').val(''); $('#f_pass_note').show();
+            $('#form-title').text('Edit Database User'); $('#btn-save-text').text('Update Database');
             $('#form-area').slideDown();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
     };
 
-    // Helper: Delete Mode (Soft Delete)
     window.deleteMode = async (id) => {
-        if(!confirm('Hapus akses user ini?')) return;
+        if(!confirm('Hapus akses user ini secara permanen dari Cloud?')) return;
         const db = await initDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         store.get(id).onsuccess = e => {
-            const data = e.target.result;
-            data.deleted = 1; 
-            data.synced = false; 
-            data.updated_at = Date.now();
-            store.put(data);
+            const d = e.target.result;
+            d.deleted = 1; d.synced = false; d.updated_at = Date.now();
+            store.put(d);
         };
-        tx.oncomplete = () => {
-            syncData();
-            renderTable();
-        };
+        tx.oncomplete = () => { renderTable(); syncData(); };
     };
 
-    // UI Toggles
-    $('#btn-toggle-form').on('click', () => {
-        $('#f_id, #f_user, #f_email, #f_pass').val('');
+    $('#btn-toggle-form').on('click', () => { 
+        $('#f_id').val(''); 
         $('#f_pass_note').hide();
-        $('#f_pass').attr('placeholder', 'Min. 6 karakter');
-        $('#form-title').text('Input User Baru'); 
-        $('#btn-save-text').text('Simpan User Baru');
-        $('#form-area').slideDown();
+        $('#form-title').text('Input User Baru'); $('#btn-save-text').text('Simpan User Baru');
+        $('#form-area').slideToggle(); 
     });
-
-    $('#btn-cancel').on('click', () => $('#form-area').slideUp());
+    
     $('#btn-force-sync').on('click', () => syncData(true));
+    $('#btn-cancel').on('click', () => $('#form-area').slideUp());
 
-    // Start
+    // 7. Lifecycle
     $(document).ready(function() {
         renderTable();
-        // Delay sync sedikit agar koneksi DB stabil
-        setTimeout(() => syncData(), 1000);
-        window.addEventListener('online', () => syncData());
+        setTimeout(syncData, 1500); // Initial Sync
+        window.addEventListener('online', syncData);
     });
 </script>
