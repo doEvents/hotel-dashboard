@@ -6,6 +6,35 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        color: var(--text-main); /* Memastikan teks di dalam card mengikuti tema */
+    }
+
+    /* FIX: Tabel Gelap Kontras Tinggi */
+    .table { 
+        color: var(--text-main) !important; 
+        border-color: var(--border-color) !important;
+        background-color: transparent !important; /* Agar tembus ke background nebula-card */
+    }
+
+    /* Memaksa elemen baris tabel agar tidak berwarna putih */
+    .table > :not(caption) > * > * {
+        background-color: transparent !important;
+        color: var(--text-main) !important;
+        border-bottom-color: var(--border-color) !important;
+    }
+
+    .table thead th {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: var(--text-muted) !important;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1.5px;
+        border-top: none;
+    }
+
+    /* Efek Hover Baris */
+    .table-hover tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.03) !important;
     }
 
     /* Modal Styling */
@@ -16,49 +45,27 @@
         color: var(--text-main);
     }
 
-    .modal-header { border-bottom: 1px solid var(--border-color); }
-    .modal-footer { border-top: 1px solid var(--border-color); }
-
-    /* Form Input & Dropdown Nebula */
-    .form-control {
+    .form-control, .form-select {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid var(--border-color) !important;
         color: var(--text-main) !important;
         border-radius: 12px;
     }
 
-    .form-select {
-        background-color: #1a1f2b !important;
-        border: 1px solid var(--border-color) !important;
-        color: var(--text-main) !important;
-        border-radius: 12px;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
-    }
-
     .form-select option {
-        background-color: #111622 !important;
-        color: #ffffff !important;
-    }
-
-    /* Table & Badge */
-    .table { color: var(--text-main); border-color: var(--border-color); }
-    .table thead th {
-        background: rgba(255, 255, 255, 0.02);
-        color: var(--text-muted);
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        letter-spacing: 1px;
+        background-color: #111622;
+        color: #fff;
     }
 
     .user-badge {
         font-size: 0.7rem;
         padding: 4px 10px;
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--border-color);
+        background: rgba(168, 85, 247, 0.1);
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        color: #a855f7;
     }
 
-    /* Custom Button sesuai Instruksi */
     .btn-primary.shadow-sm {
         background: var(--accent-glow) !important;
         border: none !important;
@@ -68,8 +75,8 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0 text-white">User Management</h4>
-            <p class="text-muted small mb-0">Database Lokal: Store 'users'</p>
+            <h4 class="fw-bold mb-0 text-white">Access Control</h4>
+            <p class="text-muted small mb-0">Management personil di store 'users'</p>
         </div>
         <button class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold" onclick="openUserModal()">
             <i class="bi bi-person-plus-fill me-2"></i>Tambah User
@@ -78,7 +85,7 @@
 
     <div class="nebula-card">
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Username</th>
@@ -88,7 +95,8 @@
                         <th class="text-end">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="userTableBody"></tbody>
+                <tbody id="userTableBody">
+                    </tbody>
             </table>
         </div>
     </div>
@@ -96,9 +104,9 @@
 
 <div class="modal fade" id="userModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content shadow-lg border-secondary">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">User Configuration</h5>
+                <h5 class="modal-title fw-bold">User Configuration</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="userForm">
@@ -106,21 +114,21 @@
                     <input type="hidden" id="userId">
                     <div class="mb-3">
                         <label class="form-label">USERNAME</label>
-                        <input type="text" id="username" class="form-control" required>
+                        <input type="text" id="username" class="form-control" required autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">EMAIL ADDRESS</label>
-                        <input type="email" id="email" class="form-control" required>
+                        <input type="email" id="email" class="form-control" required autocomplete="off">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">ACCESS PASSWORD</label>
-                        <input type="password" id="password" class="form-control">
+                        <label class="form-label">PASSWORD</label>
+                        <input type="password" id="password" class="form-control" autocomplete="new-password">
                         <small id="passHelp" class="text-muted" style="font-size: 10px;"></small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">RANK / GROUP</label>
                         <select id="group" class="form-select" required>
-                            <option value="" disabled selected>Pilih group...</option>
+                            <option value="" disabled selected>Pilih akses...</option>
                             <option value="admin">Admin</option>
                             <option value="supervisor">Supervisor</option>
                             <option value="staf">Staf</option>
@@ -128,8 +136,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold">Simpan User</button>
+                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold">Simpan Data</button>
                 </div>
             </form>
         </div>
@@ -137,32 +145,24 @@
 </div>
 
 <script>
-    // FIX: Gunakan fallback jika window.DB_NAME belum didefinisikan
+    // Gunakan versi 2 untuk memastikan store 'users' terbuat jika sebelumnya gagal
     var dbName = window.app_name || "NebulaCoreDB";
     var storeName = "users";
     var db;
     var userModal = new bootstrap.Modal(document.getElementById('userModal'));
 
-    // FIX: Naikkan versi ke 2 untuk memaksa pembuatan tabel 'users'
     var request = indexedDB.open(dbName, 2);
 
     request.onupgradeneeded = (e) => {
-        var dbInstance = e.target.result;
-        console.log("Upgrading Database...");
-        if (!dbInstance.objectStoreNames.contains(storeName)) {
-            dbInstance.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
-            console.log("Store 'users' created.");
+        var dbInst = e.target.result;
+        if (!dbInst.objectStoreNames.contains(storeName)) {
+            dbInst.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
         }
     };
 
     request.onsuccess = (e) => {
         db = e.target.result;
-        console.log("Database Connection Success.");
         loadUsers();
-    };
-
-    request.onerror = (e) => {
-        console.error("Database Error:", e.target.errorCode);
     };
 
     async function hashPassword(password) {
@@ -175,7 +175,7 @@
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
         document.getElementById('password').required = true;
-        document.getElementById('passHelp').innerText = "Password akan di-hash SHA-256";
+        document.getElementById('passHelp').innerText = "Hashing: SHA-256 Enabled";
         userModal.show();
     }
 
@@ -216,16 +216,11 @@
     };
 
     function loadUsers() {
-        // FIX: Tambahkan pengecekan store sebelum transaksi
-        if (!db.objectStoreNames.contains(storeName)) {
-            console.warn("Store not found yet. Database might be updating.");
-            return;
-        }
+        if (!db || !db.objectStoreNames.contains(storeName)) return;
 
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = '';
-        const transaction = db.transaction(storeName, "readonly");
-        const store = transaction.objectStore(storeName);
+        const store = db.transaction(storeName, "readonly").objectStore(storeName);
 
         store.openCursor().onsuccess = (e) => {
             const cursor = e.target.result;
@@ -236,13 +231,15 @@
                         <td class="fw-bold text-white">${u.username}</td>
                         <td class="text-muted small">${u.email}</td>
                         <td><span class="user-badge">${u.group}</span></td>
-                        <td><code class="text-info" style="font-size: 10px;">${u.password.substring(0, 10)}...</code></td>
+                        <td><code class="text-info" style="font-size: 10px; opacity: 0.7;">${u.password.substring(0, 12)}...</code></td>
                         <td class="text-end">
                             <button onclick="editUser(${u.id})" class="btn btn-sm btn-outline-info border-0"><i class="bi bi-pencil-square"></i></button>
                             <button onclick="deleteUser(${u.id})" class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash3"></i></button>
                         </td>
                     </tr>`;
                 cursor.continue();
+            } else if (!tbody.innerHTML) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Database Kosong.</td></tr>';
             }
         };
     }
@@ -261,7 +258,7 @@
     };
 
     window.deleteUser = (id) => {
-        if (confirm('Hapus user ini?')) {
+        if (confirm('Erase this personnel access?')) {
             db.transaction(storeName, "readwrite").objectStore(storeName).delete(id).oncomplete = () => loadUsers();
         }
     };
