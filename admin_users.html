@@ -1,260 +1,300 @@
+<script>
+    // Security check: Memastikan file di-load melalui sistem main-container
+    if (typeof window.loadPage === 'undefined') window.location.href = 'index.php';
+</script>
+
 <style>
-    /* Nebula Card Styling */
-    .nebula-card {
-        background: var(--sidebar-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        color: var(--text-main); /* Memastikan teks di dalam card mengikuti tema */
-    }
-
-    /* FIX: Tabel Gelap Kontras Tinggi */
+    .nebula-muted { color: #8694a8 !important; }
+    .form-label { color: #8694a8; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .settings-card { background: #111622; border: 1px solid rgba(255,255,255,0.08); }
+    .spin { animation: fa-spin 1s infinite linear; }
+    @keyframes fa-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     
-    /* Memaksa elemen baris tabel agar tidak berwarna putih */
-    .table > :not(caption) > * > * {
-        background-color: transparent !important;
-        color: var(--text-main) !important;
-        border-bottom-color: var(--border-color) !important;
-    }
+    /* Custom Scrollbar for Table */
+    .table-responsive::-webkit-scrollbar { height: 4px; }
+    .table-responsive::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-    .table thead th {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: var(--text-muted) !important;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        letter-spacing: 1.5px;
-        border-top: none;
-    }
-
-    /* Efek Hover Baris */
-    .table-hover tbody tr:hover {
-        background-color: rgba(255, 255, 255, 0.03) !important;
-    }
-
-    /* Modal Styling */
-    .modal-content {
-        background-color: #111622; 
-        border: 1px solid var(--border-color);
-        border-radius: 24px;
-        color: var(--text-main);
-    }
-
-    .form-control, .form-select {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid var(--border-color) !important;
-        color: var(--text-main) !important;
-        border-radius: 12px;
-    }
-
-    .form-select option {
-        background-color: #111622;
-        color: #fff;
-    }
-
-    .user-badge {
-        font-size: 0.7rem;
-        padding: 4px 10px;
-        border-radius: 8px;
-        background: rgba(168, 85, 247, 0.1);
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        color: #a855f7;
-    }
-
-    .btn-primary.shadow-sm {
-        background: var(--accent-glow) !important;
-        border: none !important;
+    /* Form control focus effect */
+    .form-control:focus, .form-select:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
     }
 </style>
 
-<div class="container-fluid">
+<br><br>
+<div class="settings-card shadow-lg p-4 rounded-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0 text-white">Access Control</h4>
-            <p class="text-muted small mb-0">Management personil di store 'users'</p>
+            <h4 class="fw-bold mb-0 text-white">Database User</h4>
+            <small id="sync-indicator" class="nebula-muted">Sinkronisasi otomatis aktif</small>
         </div>
-        <button class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold" onclick="openUserModal()">
-            <i class="bi bi-person-plus-fill me-2"></i>Tambah User
-        </button>
-    </div>
-
-    <div class="nebula-card">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Group</th>
-                        <th>Security Hash</th>
-                        <th class="text-end">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody">
-                    </tbody>
-            </table>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary shadow-sm px-3 rounded-pill fw-bold text-white border-secondary border-opacity-50" id="btn-force-sync">
+                <i class="bi bi-cloud-download me-1"></i> FORCE SYNC
+            </button>
+            <button class="btn btn-sm btn-primary shadow-sm px-3 rounded-pill fw-bold" id="btn-toggle-form">
+                <i class="bi bi-person-plus-fill me-1"></i> TAMBAH USER
+            </button>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="userModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-secondary">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">User Configuration</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div id="form-area" class="mb-4 p-4 rounded-4 border border-secondary border-opacity-25" style="display: none; background: rgba(255,255,255,0.01);">
+        <h5 id="form-title" class="fw-bold mb-4 text-primary">Input User Baru</h5>
+        <input type="hidden" id="f_id">
+        
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">USERNAME</label>
+                <input type="text" id="f_user" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="Username unik">
             </div>
-            <form id="userForm">
-                <div class="modal-body">
-                    <input type="hidden" id="userId">
-                    <div class="mb-3">
-                        <label class="form-label">USERNAME</label>
-                        <input type="text" id="username" class="form-control" required autocomplete="off">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">EMAIL ADDRESS</label>
-                        <input type="email" id="email" class="form-control" required autocomplete="off">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">PASSWORD</label>
-                        <input type="password" id="password" class="form-control" autocomplete="new-password">
-                        <small id="passHelp" class="text-muted" style="font-size: 10px;"></small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">RANK / GROUP</label>
-                        <select id="group" class="form-select" required>
-                            <option value="" disabled selected>Pilih akses...</option>
-                            <option value="admin">Admin</option>
-                            <option value="supervisor">Supervisor</option>
-                            <option value="staf">Staf</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold">Simpan Data</button>
-                </div>
-            </form>
+            <div class="col-md-6">
+                <label class="form-label">EMAIL ADDRESS</label>
+                <input type="email" id="f_email" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="email@nebula.com">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">PASSWORD</label>
+                <input type="password" id="f_pass" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="Min. 6 karakter">
+                <small id="f_pass_note" class="text-warning mt-1" style="display:none; font-size: 10px;">* Kosongkan jika tidak ingin ganti password</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">LEVEL AKSES</label>
+                <select id="f_group" class="form-select form-select-sm bg-dark text-white border-secondary">
+                    <option value="staf">Staf</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
         </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <button class="btn btn-sm btn-outline-secondary px-4 rounded-pill border-opacity-25 nebula-muted" id="btn-cancel">Batal</button>
+            <button class="btn btn-sm btn-primary shadow-sm px-4 rounded-pill fw-bold" id="btn-save">
+                <i class="bi bi-cloud-arrow-up me-2"></i> <span id="btn-save-text">Simpan User Baru</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0">
+            <thead class="small nebula-muted">
+                <tr>
+                    <th>PROFIL USER</th>
+                    <th>ROLE</th>
+                    <th class="text-center">STATUS</th>
+                    <th class="text-end">OPSI</th>
+                </tr>
+            </thead>
+            <tbody id="user_table_body" style="font-size: 13px; border-top: transparent;">
+                </tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    // Gunakan versi 2 untuk memastikan store 'users' terbuat jika sebelumnya gagal
-    var dbName = window.app_name || "NebulaCoreDB";
-    var storeName = "users";
-    var db;
-    var userModal = new bootstrap.Modal(document.getElementById('userModal'));
+    var DB_NAME = 'Nebula_UserSync';
+    var STORE_NAME = 'users';
 
-    var request = indexedDB.open(dbName, 2);
-
-    request.onupgradeneeded = (e) => {
-        var dbInst = e.target.result;
-        if (!dbInst.objectStoreNames.contains(storeName)) {
-            dbInst.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
-        }
-    };
-
-    request.onsuccess = (e) => {
-        db = e.target.result;
-        loadUsers();
-    };
-
-    async function hashPassword(password) {
-        const msgUint8 = new TextEncoder().encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // Password Hashing SHA-256
+    async function hash(p) {
+        if(!p) return '';
+        const msg = new TextEncoder().encode(p);
+        const buf = await crypto.subtle.digest('SHA-256', msg);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    function openUserModal() {
-        document.getElementById('userForm').reset();
-        document.getElementById('userId').value = '';
-        document.getElementById('password').required = true;
-        document.getElementById('passHelp').innerText = "Hashing: SHA-256 Enabled";
-        userModal.show();
+    // Database Init
+    function initDB() {
+        return new Promise((resolve) => {
+            const req = indexedDB.open(DB_NAME, 3);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                if (!db.objectStoreNames.contains('tipe_kamar')) db.createObjectStore('tipe_kamar', { keyPath: 'id' });
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+        });
     }
 
-    document.getElementById('userForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('userId').value;
-        const passVal = document.getElementById('password').value;
+    // Render Table From Local Data
+    async function renderTable() {
+        const db = await initDB();
+        const transaction = db.transaction(STORE_NAME, "readonly");
+        const store = transaction.objectStore(STORE_NAME);
         
-        const userData = {
-            username: document.getElementById('username').value,
-            email: document.getElementById('email').value,
-            group: document.getElementById('group').value
-        };
-
-        const transaction = db.transaction([storeName], "readwrite");
-        const store = transaction.objectStore(storeName);
-
-        if (id) {
-            userData.id = Number(id);
-            if (passVal) {
-                userData.password = await hashPassword(passVal);
-            } else {
-                const existing = await new Promise(res => {
-                    store.get(userData.id).onsuccess = (ev) => res(ev.target.result);
-                });
-                userData.password = existing.password;
+        store.getAll().onsuccess = (e) => {
+            const list = $('#user_table_body').empty();
+            const users = e.target.result.filter(u => u.deleted === 0);
+            
+            if (users.length === 0) {
+                list.append('<tr><td colspan="4" class="text-center p-5 nebula-muted">Data lokal kosong.</td></tr>');
+                return;
             }
-            store.put(userData);
-        } else {
-            userData.password = await hashPassword(passVal);
-            store.add(userData);
-        }
 
-        transaction.oncomplete = () => { 
-            userModal.hide(); 
-            loadUsers(); 
-        };
-    };
-
-    function loadUsers() {
-        if (!db || !db.objectStoreNames.contains(storeName)) return;
-
-        const tbody = document.getElementById('userTableBody');
-        tbody.innerHTML = '';
-        const store = db.transaction(storeName, "readonly").objectStore(storeName);
-
-        store.openCursor().onsuccess = (e) => {
-            const cursor = e.target.result;
-            if (cursor) {
-                const u = cursor.value;
-                tbody.innerHTML += `
+            users.sort((a,b) => b.updated_at - a.updated_at).forEach(u => {
+                list.append(`
                     <tr>
-                        <td class="fw-bold text-white">${u.username}</td>
-                        <td class="text-muted small">${u.email}</td>
-                        <td><span class="user-badge">${u.group}</span></td>
-                        <td><code class="text-info" style="font-size: 10px; opacity: 0.7;">${u.password.substring(0, 12)}...</code></td>
-                        <td class="text-end">
-                            <button onclick="editUser(${u.id})" class="btn btn-sm btn-outline-info border-0"><i class="bi bi-pencil-square"></i></button>
-                            <button onclick="deleteUser(${u.id})" class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash3"></i></button>
+                        <td>
+                            <div class="fw-bold text-white">${u.username}</div>
+                            <div class="nebula-muted" style="font-size: 11px;">${u.email}</div>
                         </td>
-                    </tr>`;
-                cursor.continue();
-            } else if (!tbody.innerHTML) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Database Kosong.</td></tr>';
-            }
+                        <td><span class="badge bg-secondary bg-opacity-25 text-white fw-normal p-2 px-3 rounded-pill" style="font-size: 10px;">${u.user_group.toUpperCase()}</span></td>
+                        <td class="text-center">
+                            <i class="bi bi-cloud-check-fill ${u.synced ? 'text-success' : 'text-warning'}" 
+                               title="${u.synced ? 'Tersinkron' : 'Belum Sinkron'}"></i>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm text-info border-0 me-1" onclick="editMode('${u.id}')"><i class="bi bi-pencil-square fs-5"></i></button>
+                            <button class="btn btn-sm text-danger border-0" onclick="deleteMode('${u.id}')"><i class="bi bi-trash3 fs-5"></i></button>
+                        </td>
+                    </tr>
+                `);
+            });
         };
     }
 
-    window.editUser = (id) => {
-        db.transaction(storeName).objectStore(storeName).get(id).onsuccess = (e) => {
+    // Sync Logic
+    async function syncData(isForce = false) {
+        if (!navigator.onLine) {
+            $('#sync-indicator').text('Offline Mode').css('color', '#fbbf24');
+            return;
+        }
+        
+        $('#sync-indicator').text('Menyingkronkan...').css('color', '#10b981');
+        const $icon = $('#btn-force-sync i');
+        if(isForce) $icon.addClass('spin');
+
+        const db = await initDB();
+        const allData = await new Promise(r => {
+            db.transaction(STORE_NAME).objectStore(STORE_NAME).getAll().onsuccess = e => r(e.target.result);
+        });
+
+        const localChanges = allData.filter(u => !u.synced);
+        let lastSyncTime = isForce ? 0 : (localStorage.getItem('last_sync_ts') || 0);
+
+        // AJAX ke app.php (Pastikan file ini ada di server Anda)
+        $.ajax({
+            url: 'app.php', 
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ localChanges, lastSyncTime }),
+            success: async function(res) {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+
+                if(res.serverChanges) {
+                    res.serverChanges.forEach(s => { s.synced = true; store.put(s); });
+                }
+                localChanges.forEach(l => { l.synced = true; store.put(l); });
+
+                tx.oncomplete = () => {
+                    localStorage.setItem('last_sync_ts', res.serverTime || Date.now());
+                    $('#sync-indicator').text('Synced').css('color', '#10b981');
+                    if(isForce) $icon.removeClass('spin');
+                    renderTable();
+                };
+            },
+            error: () => {
+                if(isForce) $icon.removeClass('spin');
+                $('#sync-indicator').text('Sync Error').css('color', '#ef4444');
+            }
+        });
+    }
+
+    // Save Logic (Add & Update)
+    $('#btn-save').on('click', async function() {
+        const id = $('#f_id').val();
+        const u = $('#f_user').val();
+        const e = $('#f_email').val();
+        const p = $('#f_pass').val();
+        const g = $('#f_group').val();
+
+        if(!u || !e) return alert('Username dan Email wajib diisi!');
+
+        const db = await initDB();
+        const isEdit = id !== "";
+        
+        let existing = null;
+        if(isEdit) {
+            existing = await new Promise(r => {
+                db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = ev => r(ev.target.result);
+            });
+        }
+
+        const userData = {
+            id: isEdit ? id : 'USR-' + Date.now(),
+            username: u,
+            email: e,
+            user_group: g,
+            password: p ? await hash(p) : (existing ? existing.password : ''),
+            updated_at: Date.now(),
+            deleted: 0,
+            synced: false
+        };
+
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(userData);
+        tx.oncomplete = () => {
+            $('#form-area').slideUp();
+            syncData(); // Trigger sync setelah simpan lokal
+            renderTable();
+        };
+    });
+
+    // Helper: Edit Mode
+    window.editMode = async (id) => {
+        const db = await initDB();
+        db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = (e) => {
             const u = e.target.result;
-            document.getElementById('userId').value = u.id;
-            document.getElementById('username').value = u.username;
-            document.getElementById('email').value = u.email;
-            document.getElementById('group').value = u.group;
-            document.getElementById('password').required = false;
-            document.getElementById('passHelp').innerText = "Kosongkan jika tidak ingin ganti password";
-            userModal.show();
+            $('#f_id').val(u.id); 
+            $('#f_user').val(u.username); 
+            $('#f_email').val(u.email); 
+            $('#f_group').val(u.user_group);
+            $('#f_pass').val(''); 
+            $('#f_pass_note').show();
+            $('#form-title').text('Edit User Account'); 
+            $('#btn-save-text').text('Update Database');
+            $('#form-area').slideDown();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
     };
 
-    window.deleteUser = (id) => {
-        if (confirm('Erase this personnel access?')) {
-            db.transaction(storeName, "readwrite").objectStore(storeName).delete(id).oncomplete = () => loadUsers();
-        }
+    // Helper: Delete Mode (Soft Delete)
+    window.deleteMode = async (id) => {
+        if(!confirm('Hapus akses user ini?')) return;
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.get(id).onsuccess = e => {
+            const data = e.target.result;
+            data.deleted = 1; 
+            data.synced = false; 
+            data.updated_at = Date.now();
+            store.put(data);
+        };
+        tx.oncomplete = () => {
+            syncData();
+            renderTable();
+        };
     };
+
+    // UI Toggles
+    $('#btn-toggle-form').on('click', () => {
+        $('#f_id, #f_user, #f_email, #f_pass').val('');
+        $('#f_pass_note').hide();
+        $('#f_pass').attr('placeholder', 'Min. 6 karakter');
+        $('#form-title').text('Input User Baru'); 
+        $('#btn-save-text').text('Simpan User Baru');
+        $('#form-area').slideDown();
+    });
+
+    $('#btn-cancel').on('click', () => $('#form-area').slideUp());
+    $('#btn-force-sync').on('click', () => syncData(true));
+
+    // Start
+    $(document).ready(function() {
+        renderTable();
+        // Delay sync sedikit agar koneksi DB stabil
+        setTimeout(() => syncData(), 1000);
+        window.addEventListener('online', () => syncData());
+    });
 </script>
