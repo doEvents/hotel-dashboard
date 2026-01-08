@@ -1,5 +1,5 @@
 <style>
-    /* Card & Container Styling */
+    /* Nebula Card Styling */
     .nebula-card {
         background: var(--sidebar-bg);
         border: 1px solid var(--border-color);
@@ -8,51 +8,47 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
-    /* Modal Customization */
+    /* Modal Styling */
     .modal-content {
-        background-color: var(--sidebar-bg);
+        background-color: #111622; /* Solid Nebula Deep */
         border: 1px solid var(--border-color);
         border-radius: 24px;
         color: var(--text-main);
-        backdrop-filter: blur(20px);
     }
 
-    .modal-header {
-        border-bottom: 1px solid var(--border-color);
-    }
+    .modal-header { border-bottom: 1px solid var(--border-color); }
+    .modal-footer { border-top: 1px solid var(--border-color); }
 
-    .modal-footer {
-        border-top: 1px solid var(--border-color);
-    }
-
-    /* Input Styling */
-    .form-control, .form-select {
-        background-color: rgba(255, 255, 255, 0.03) !important;
+    /* Form Input & Dropdown Nebula */
+    .form-control {
+        background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid var(--border-color) !important;
         color: var(--text-main) !important;
         border-radius: 12px;
-        padding: 10px 15px;
     }
 
-    .form-control:focus, .form-select:focus {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border-color: #a855f7 !important;
-        box-shadow: 0 0 10px rgba(168, 85, 247, 0.2) !important;
+    .form-select {
+        background-color: #1a1f2b !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-main) !important;
+        border-radius: 12px;
+        /* Custom arrow untuk dark mode */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
     }
 
-    /* Table Styling */
-    .table {
-        color: var(--text-main);
-        border-color: var(--border-color);
+    .form-select option {
+        background-color: #111622 !important;
+        color: #ffffff !important;
     }
 
+    /* Table & Badge */
+    .table { color: var(--text-main); border-color: var(--border-color); }
     .table thead th {
         background: rgba(255, 255, 255, 0.02);
         color: var(--text-muted);
         text-transform: uppercase;
         font-size: 0.7rem;
         letter-spacing: 1px;
-        border-bottom: 1px solid var(--border-color);
     }
 
     .user-badge {
@@ -63,7 +59,7 @@
         border: 1px solid var(--border-color);
     }
 
-    /* Override Primary Button for Nebula */
+    /* Custom Button sesuai Instruksi */
     .btn-primary.shadow-sm {
         background: var(--accent-glow) !important;
         border: none !important;
@@ -73,11 +69,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0">Manajemen Users</h4>
-            <p class="text-muted small mb-0">Kelola akses personil ke sistem Nebula</p>
+            <h4 class="fw-bold mb-0 text-white">User Management</h4>
+            <p class="text-muted small mb-0">Database Lokal: Store 'users'</p>
         </div>
         <button class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold" onclick="openUserModal()">
-            <i class="bi bi-person-plus-fill me-2"></i>Tambah User Baru
+            <i class="bi bi-person-plus-fill me-2"></i>Tambah User
         </button>
     </div>
 
@@ -88,7 +84,7 @@
                     <tr>
                         <th>Username</th>
                         <th>Email</th>
-                        <th>Role / Group</th>
+                        <th>Group</th>
                         <th>Security Hash</th>
                         <th class="text-end">Aksi</th>
                     </tr>
@@ -100,43 +96,43 @@
     </div>
 </div>
 
-<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="userModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="modalTitle">User Baru</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">User Configuration</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="userForm">
                 <div class="modal-body">
                     <input type="hidden" id="userId">
                     <div class="mb-3">
                         <label class="form-label">USERNAME</label>
-                        <input type="text" id="username" class="form-control" placeholder="Masukkan username" required>
+                        <input type="text" id="username" class="form-control" placeholder="Input username" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">EMAIL ADDRESS</label>
-                        <input type="email" id="email" class="form-control" placeholder="user@nebula.com" required>
+                        <input type="email" id="email" class="form-control" placeholder="email@nebula.com" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">ACCESS PASSWORD</label>
-                        <input type="password" id="password" class="form-control" placeholder="Password minimal 6 karakter" required>
-                        <small class="text-muted mt-1 d-block" style="font-size: 10px;">Password akan dienkripsi otomatis (SHA-256)</small>
+                        <input type="password" id="password" class="form-control" placeholder="Secure password">
+                        <small id="passHelp" class="text-muted" style="font-size: 10px;"></small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">RANK / GROUP</label>
                         <select id="group" class="form-select" required>
-                            <option value="">Pilih Group...</option>
+                            <option value="" disabled selected>Pilih group...</option>
                             <option value="admin">Admin</option>
                             <option value="supervisor">Supervisor</option>
                             <option value="staf">Staf</option>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary shadow-sm px-4 py-2 rounded-pill fw-bold">
-                        <i class="bi bi-cloud-check-fill me-2"></i>Simpan Data
+                        <i class="bi bi-shield-lock-fill me-1"></i> Simpan User
                     </button>
                 </div>
             </form>
@@ -145,138 +141,123 @@
 </div>
 
 <script>
-    const dbName = "NebulaUsersDB";
-    const storeName = "accounts";
+    var dbName = window.DB_NAME;
+    var storeName = "users"; // Sesuai permintaan Anda
     let db;
     const userModal = new bootstrap.Modal(document.getElementById('userModal'));
 
-    // 1. Database Initialization
+    // Database Initialization
     const request = indexedDB.open(dbName, 1);
-
     request.onupgradeneeded = (e) => {
         db = e.target.result;
         if (!db.objectStoreNames.contains(storeName)) {
             db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
         }
     };
-
-    request.onsuccess = (e) => {
-        db = e.target.result;
-        loadUsers();
+    request.onsuccess = (e) => { 
+        db = e.target.result; 
+        loadUsers(); 
     };
 
-    // 2. Password Encryption (SHA-256)
+    // Password Hashing SHA-256
     async function hashPassword(password) {
         const msgUint8 = new TextEncoder().encode(password);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // 3. UI Helpers
+    // Modal Helper
     function openUserModal() {
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
-        document.getElementById('modalTitle').innerText = 'User Baru';
         document.getElementById('password').required = true;
+        document.getElementById('passHelp').innerText = "Password akan di-hash menggunakan SHA-256";
         userModal.show();
     }
 
-    // 4. CRUD Operations
+    // CRUD: Save (Add/Update)
     document.getElementById('userForm').onsubmit = async (e) => {
         e.preventDefault();
-        
         const id = document.getElementById('userId').value;
         const passVal = document.getElementById('password').value;
         
         const userData = {
             username: document.getElementById('username').value,
             email: document.getElementById('email').value,
-            group: document.getElementById('group').value,
-            updatedAt: new Date().toISOString()
+            group: document.getElementById('group').value
         };
-
-        // Enkripsi password hanya jika diisi (untuk edit, boleh dikosongkan jika tak ingin ganti)
-        if (passVal) {
-            userData.password = await hashPassword(passVal);
-        }
 
         const transaction = db.transaction([storeName], "readwrite");
         const store = transaction.objectStore(storeName);
 
         if (id) {
-            // Update
             userData.id = Number(id);
-            // Ambil password lama jika password baru tidak diisi
-            if (!passVal) {
-                const oldData = await new Promise(resolve => {
-                    store.get(userData.id).onsuccess = (ev) => resolve(ev.target.result);
+            if (passVal) {
+                userData.password = await hashPassword(passVal);
+            } else {
+                // Ambil password lama jika tidak diubah
+                const existing = await new Promise(res => {
+                    store.get(userData.id).onsuccess = (ev) => res(ev.target.result);
                 });
-                userData.password = oldData.password;
+                userData.password = existing.password;
             }
             store.put(userData);
         } else {
-            // Create
+            userData.password = await hashPassword(passVal);
             store.add(userData);
         }
 
-        transaction.oncomplete = () => {
-            userModal.hide();
-            loadUsers();
+        transaction.oncomplete = () => { 
+            userModal.hide(); 
+            loadUsers(); 
         };
     };
 
+    // CRUD: Read
     function loadUsers() {
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = '';
-
-        const transaction = db.transaction(storeName, "readonly");
-        const store = transaction.objectStore(storeName);
-
+        const store = db.transaction(storeName, "readonly").objectStore(storeName);
         store.openCursor().onsuccess = (e) => {
             const cursor = e.target.result;
             if (cursor) {
                 const u = cursor.value;
-                const row = `
+                tbody.innerHTML += `
                     <tr>
-                        <td class="fw-bold">${u.username}</td>
+                        <td class="fw-bold text-white">${u.username}</td>
                         <td class="text-muted small">${u.email}</td>
                         <td><span class="user-badge">${u.group}</span></td>
-                        <td><code class="text-info" style="font-size: 10px;">${u.password.substring(0, 15)}...</code></td>
+                        <td><code class="text-info" style="font-size: 10px;">${u.password.substring(0, 12)}...</code></td>
                         <td class="text-end">
                             <button onclick="editUser(${u.id})" class="btn btn-sm btn-outline-info border-0"><i class="bi bi-pencil-square"></i></button>
                             <button onclick="deleteUser(${u.id})" class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash3"></i></button>
                         </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                    </tr>`;
                 cursor.continue();
-            } else if (tbody.innerHTML === '') {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Tidak ada data user.</td></tr>';
+            } else if (!tbody.innerHTML) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Empty database.</td></tr>';
             }
         };
     }
 
+    // CRUD: Edit
     window.editUser = (id) => {
-        const store = db.transaction([storeName], "readonly").objectStore(storeName);
-        store.get(id).onsuccess = (e) => {
+        db.transaction(storeName).objectStore(storeName).get(id).onsuccess = (e) => {
             const u = e.target.result;
             document.getElementById('userId').value = u.id;
             document.getElementById('username').value = u.username;
             document.getElementById('email').value = u.email;
             document.getElementById('group').value = u.group;
             document.getElementById('password').required = false;
-            document.getElementById('password').placeholder = "Kosongkan jika tidak ganti";
-            document.getElementById('modalTitle').innerText = 'Edit User';
+            document.getElementById('passHelp').innerText = "Biarkan kosong jika tidak ingin mengubah password";
             userModal.show();
         };
     };
 
+    // CRUD: Delete
     window.deleteUser = (id) => {
-        if (confirm('Hapus akses user ini secara permanen?')) {
-            const transaction = db.transaction([storeName], "readwrite");
-            transaction.objectStore(storeName).delete(id);
-            transaction.oncomplete = () => loadUsers();
+        if (confirm('Hapus user ini?')) {
+            db.transaction(storeName, "readwrite").objectStore(storeName).delete(id).oncomplete = () => loadUsers();
         }
     };
 </script>
