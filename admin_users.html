@@ -144,10 +144,10 @@
     var dbName = window.DB_NAME;
     var storeName = "users"; // Sesuai permintaan Anda
     var db;
-    const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+    var userModal = new bootstrap.Modal(document.getElementById('userModal'));
 
     // Database Initialization
-    const request = indexedDB.open(dbName, 1);
+    var request = indexedDB.open(dbName, 1);
     request.onupgradeneeded = (e) => {
         db = e.target.result;
         if (!db.objectStoreNames.contains(storeName)) {
