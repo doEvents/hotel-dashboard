@@ -1,0 +1,200 @@
+<style>
+    #module-container {
+        display: none;
+    }
+</style>
+
+<script>
+    if (typeof window.loadPage === 'undefined') window.location.href = '';
+    // Jika hanya satu grup, tetap masukkan dalam array
+    window.requiredGroups = ['admin'];
+
+    $.getScript('js/auth_page.js', function() {
+        $('#module-container').fadeIn(300);
+    });
+</script>
+
+
+<style>
+    .settings-card, .shortcut-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .settings-card { padding: 25px; animation: fadeIn 0.4s ease; }
+
+    /* Shortcut Card Styling */
+    .shortcut-card {
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        text-decoration: none;
+    }
+
+    .shortcut-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #a855f7;
+        transform: translateY(-5px);
+        color: white;
+        box-shadow: 0 10px 20px rgba(168, 85, 247, 0.1);
+    }
+
+    .shortcut-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        background: var(--accent-glow);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .dev-status-box {
+        padding: 10px 15px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed var(--border-color);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container-fluid" id="module-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h3 class="fw-bold mb-4"><i class="bi bi-sliders2-vertical me-2"></i> Administrator</h3>
+            
+            <div class="settings-card shadow-lg mb-5">
+                <h5 class="mb-3">Mode Pengembang</h5>
+                <p class="small mb-4">Aktifkan opsi ini untuk melihat log sistem dan fitur eksperimental.</p>
+
+                <div class="d-flex align-items-center justify-content-between dev-status-box mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-code-slash fs-4 text-primary me-3"></i>
+                        <div>
+                            <div class="fw-bold">Developer Mode</div>
+                            <small id="dev-text" class="text-secondary">Status: Nonaktif</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input fs-3" type="checkbox" role="switch" id="dev-toggle" style="cursor: pointer;">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-primary shadow-sm px-4 rounded-pill fw-bold" id="save-settings">
+                        <i class="bi bi-save me-2"></i> Simpan Konfigurasi
+                    </button>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3">Akses Cepat</h5>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="shortcut-card" onclick="loadPage('modules/admin_users.html', null)">
+                        <i class="bi bi-people-fill shortcut-icon"></i>
+                        <span class="fw-600 small">Users Sync</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="shortcut-card" onclick="loadPage('modules/statistik.html', null)">
+                        <i class="bi bi-bar-chart-line-fill shortcut-icon"></i>
+                        <span class="fw-600 small">Analitik</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="shortcut-card" onclick="loadPage('modules/auth.html', null)">
+                        <i class="bi bi-shield-lock-fill shortcut-icon"></i>
+                        <span class="fw-600 small">Otentikasi</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="shortcut-card" onclick="loadPage('modules/pegawai.html', null)">
+                        <i class="bi bi-person-badge-fill shortcut-icon"></i>
+                        <span class="fw-600 small">Data Pegawai</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="shortcut-card" onclick="loadPage('modules/database.html', null)">
+                        <i class="bi bi-database-fill-gear shortcut-icon"></i>
+                        <span class="fw-600 small">IndexedDB</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="shortcut-card" onclick="loadPage('modules/logs.html', null)">
+                        <i class="bi bi-terminal-fill shortcut-icon"></i>
+                        <span class="fw-600 small">System Logs</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 p-3 rounded-3" style="background: #000; border: 1px solid #333; display: none;" id="debug-view">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-primary fw-bold">RAW JSON CONFIG</small>
+                    <button class="btn btn-sm btn-primary shadow-sm" style="font-size: 10px;" onclick="location.reload()">Clear Cache</button>
+                </div>
+                <code class="text-success" id="json-output"></code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Objek lokal mengikuti index.html
+        let config = {
+            dev: localStorage.getItem('nebula_dev') === 'true',
+            lastUpdate: null
+        };
+        
+
+        // 1. Sinkronisasi UI awal
+        $('#dev-toggle').prop('checked', config.dev);
+        updateUI(config.dev);
+
+        // 2. Event saat checkbox berubah (visual only)
+        $('#dev-toggle').on('change', function() {
+            updateUI($(this).is(':checked'));
+        });
+
+        // 3. Tombol simpan
+        $('#save-settings').on('click', function() {
+            const isChecked = $('#dev-toggle').is(':checked');
+            
+            // Simpan ke variable global dan localStorage
+            dev = isChecked; 
+            localStorage.setItem('nebula_dev', isChecked);
+            
+            config.dev = isChecked;
+            config.lastUpdate = new Date().toISOString();
+            localStorage.setItem('nebula_config', JSON.stringify(config));
+
+            // Tampilkan feedback debug jika dev mode aktif
+            $('#json-output').text(JSON.stringify(config, null, 2));
+            if(isChecked) $('#debug-view').slideDown(); else $('#debug-view').slideUp();
+            
+            alert('Konfigurasi diperbarui! Mode Dev: ' + (isChecked ? 'AKTIF' : 'MATI'));
+            
+            // Opsional: Tampilkan/Sembunyikan indikator di index.html jika ada
+            $('#dev-indicator').toggle(isChecked);
+        });
+
+        function updateUI(isDev) {
+            if (isDev) {
+                $('#dev-text').text('Status: Aktif').removeClass('text-secondary').addClass('text-success');
+            } else {
+                $('#dev-text').text('Status: Nonaktif').removeClass('text-success').addClass('text-secondary');
+            }
+        }
+    });
+</script>
