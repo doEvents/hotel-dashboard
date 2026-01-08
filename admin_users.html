@@ -1,190 +1,162 @@
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-0">Manajemen Users (Native)</h4>
-            <small class="text-muted" id="sync-status">Status: Standby</small>
+<div class="container mt-4">
+    <h4>Manajemen User</h4>
+    <hr>
+    
+    <form id="userForm" class="mb-4">
+        <input type="hidden" id="userId">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <input type="text" id="username" class="form-control form-control-sm" placeholder="Username" required>
+            </div>
+            <div class="col-md-3">
+                <input type="email" id="email" class="form-control form-control-sm" placeholder="Email" required>
+            </div>
+            <div class="col-md-2">
+                <input type="password" id="password" class="form-control form-control-sm" placeholder="Password" required>
+            </div>
+            <div class="col-md-2">
+                <select id="group" class="form-select form-select-sm" required>
+                    <option value="">Pilih Group</option>
+                    <option value="admin">Admin</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="staf">Staf</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" id="btnSubmit" class="btn btn-sm btn-primary shadow-sm w-100">
+                    <i class="fas fa-plus"></i> Simpan User
+                </button>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <button onclick="syncDataToCloud()" class="btn btn-sm btn-outline-info shadow-sm">
-                <i class="bi bi-arrow-repeat"></i> Sync
-            </button>
-            <button onclick="showUserModal()" class="btn btn-sm btn-primary shadow-sm px-3">
-                <i class="bi bi-person-plus-fill me-2"></i>Tambah User
-            </button>
-        </div>
-    </div>
+    </form>
 
-    <div class="card bg-secondary bg-opacity-10 border border-secondary border-opacity-25 rounded-4 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-dark table-hover mb-0">
-                <thead>
-                    <tr class="text-muted small text-uppercase">
-                        <th class="ps-4 py-3">Username</th>
-                        <th>Role</th>
-                        <th>Sync Status</th>
-                        <th class="text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="user-table-body"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modalUser" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark border-secondary border-opacity-50 text-white" style="border-radius: 20px;">
-            <div class="modal-header border-secondary border-opacity-25">
-                <h5 class="modal-title fw-bold">User Baru</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label text-muted">Username</label>
-                    <input type="text" id="u_name" class="form-control bg-secondary bg-opacity-10 border-secondary border-opacity-25 text-white shadow-none">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted">Role</label>
-                    <select id="u_role" class="form-select bg-secondary bg-opacity-10 border-secondary border-opacity-25 text-white shadow-none">
-                        <option value="Admin">Admin</option>
-                        <option value="Staff">Staff</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer border-secondary border-opacity-25">
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                <button onclick="addUser()" class="btn btn-sm btn-primary shadow-sm px-4">Simpan Lokal</button>
-            </div>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Password (Hash)</th>
+                    <th>Group</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                </tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    // --- NATIVE MODAL HANDLER ---
-    // Menggunakan bootstrap.Modal asli bukan jQuery .modal()
-    const userModal = new bootstrap.Modal(document.getElementById('modalUser'));
-    function showUserModal() { userModal.show(); }
-
-    // --- NATIVE INDEXEDDB HANDLER ---
-    const DB_NAME = "NebulaLocal";
-    const STORE_NAME = "users";
+    const dbName = "UserDB";
+    const storeName = "users";
     let db;
 
-    // Inisialisasi Database
-    const request = indexedDB.open(DB_NAME, 1);
+    // 1. Inisialisasi Database
+    const request = indexedDB.open(dbName, 1);
 
     request.onupgradeneeded = (e) => {
         db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
         }
     };
 
     request.onsuccess = (e) => {
         db = e.target.result;
-        renderLocalTable();
+        displayData();
     };
 
-    // Fungsi Tambah Data (Native)
-    function addUser() {
-        const username = document.getElementById('u_name').value;
-        const role = document.getElementById('u_role').value;
-
-        if(!username) return alert("Isi username!");
-
-        const transaction = db.transaction([STORE_NAME], "readwrite");
-        const store = transaction.objectStore(STORE_NAME);
-        
-        store.add({ username, role, sync_status: 0 });
-
-        transaction.oncomplete = () => {
-            document.getElementById('u_name').value = "";
-            userModal.hide();
-            renderLocalTable();
-            if(navigator.onLine) syncDataToCloud();
-        };
+    // 2. Fungsi Enkripsi Password (SHA-256 Hashing)
+    async function hashPassword(password) {
+        const msgUint8 = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Fungsi Render Tabel (Native)
-    function renderLocalTable() {
-        const $tbody = document.getElementById('user-table-body');
-        $tbody.innerHTML = "";
+    // 3. Tambah atau Update Data
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('userId').value;
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const group = document.getElementById('group').value;
 
-        const transaction = db.transaction([STORE_NAME], "readonly");
-        const store = transaction.objectStore(STORE_NAME);
-        const cursorRequest = store.openCursor();
+        // Enkripsi password sebelum disimpan
+        const hashedPassword = await hashPassword(password);
 
-        cursorRequest.onsuccess = (e) => {
+        const transaction = db.transaction([storeName], "readwrite");
+        const store = transaction.objectStore(storeName);
+
+        const userData = { username, email, password: hashedPassword, group };
+        
+        if (id) {
+            userData.id = Number(id);
+            store.put(userData);
+        } else {
+            store.add(userData);
+        }
+
+        transaction.oncomplete = () => {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            displayData();
+        };
+    });
+
+    // 4. Tampilkan Data
+    function displayData() {
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = '';
+
+        const store = db.transaction(storeName).objectStore(storeName);
+        store.openCursor().onsuccess = (e) => {
             const cursor = e.target.result;
             if (cursor) {
-                const u = cursor.value;
-                const statusIcon = u.sync_status === 1 
-                    ? '<span class="badge bg-success-subtle text-success small">Synced</span>' 
-                    : '<span class="badge bg-warning-subtle text-warning small">Pending Sync</span>';
-
-                $tbody.innerHTML += `
-                    <tr class="border-bottom border-secondary border-opacity-10">
-                        <td class="ps-4 py-3 fw-medium text-white">${u.username}</td>
-                        <td>${u.role}</td>
-                        <td>${statusIcon}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm text-danger border-0" onclick="deleteUser(${u.id})">
-                                <i class="bi bi-trash3"></i>
-                            </button>
+                const row = `
+                    <tr>
+                        <td>${cursor.value.username}</td>
+                        <td>${cursor.value.email}</td>
+                        <td><small class="text-muted">${cursor.value.password.substring(0, 10)}...</small></td>
+                        <td><span class="badge bg-secondary">${cursor.value.group}</span></td>
+                        <td>
+                            <button onclick="editUser(${cursor.value.id})" class="btn btn-xs btn-warning py-0 px-1">Edit</button>
+                            <button onclick="deleteUser(${cursor.value.id})" class="btn btn-xs btn-danger py-0 px-1">Hapus</button>
                         </td>
                     </tr>
                 `;
+                tbody.innerHTML += row;
                 cursor.continue();
             }
         };
     }
 
-    // Fungsi Sync ke Cloud (Native Fetch)
-    async function syncDataToCloud() {
-        if(!navigator.onLine) return;
+    // 5. Edit Data
+    window.editUser = (id) => {
+        const transaction = db.transaction([storeName], "readonly");
+        const store = transaction.objectStore(storeName);
+        const request = store.get(id);
 
-        const transaction = db.transaction([STORE_NAME], "readwrite");
-        const store = transaction.objectStore(STORE_NAME);
-        const cursorRequest = store.openCursor();
-
-        document.getElementById('sync-status').innerText = "Status: Sinkronisasi...";
-
-        cursorRequest.onsuccess = async (e) => {
-            const cursor = e.target.result;
-            if (cursor) {
-                const item = cursor.value;
-                if (item.sync_status === 0) {
-                    try {
-                        await fetch(window.SCRIPT_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            body: JSON.stringify({
-                                action: "add",
-                                sheetName: "Users",
-                                data: { Username: item.username, Role: item.role }
-                            })
-                        });
-                        
-                        // Update status sync secara native
-                        const updateData = item;
-                        updateData.sync_status = 1;
-                        cursor.update(updateData);
-                    } catch (err) { console.error(err); }
-                }
-                cursor.continue();
-            } else {
-                renderLocalTable();
-                document.getElementById('sync-status').innerText = "Status: Terkoneksi";
-            }
+        request.onsuccess = () => {
+            const user = request.result;
+            document.getElementById('userId').value = user.id;
+            document.getElementById('username').value = user.username;
+            document.getElementById('email').value = user.email;
+            document.getElementById('group').value = user.group;
+            // Password tidak dimuat balik karena sudah di-hash
+            document.getElementById('password').placeholder = "Masukkan password baru";
         };
-    }
+    };
 
-    // Hapus Data (Native)
-    function deleteUser(id) {
-        if(confirm("Hapus user ini dari lokal?")) {
-            const transaction = db.transaction([STORE_NAME], "readwrite");
-            transaction.objectStore(STORE_NAME).delete(id);
-            transaction.oncomplete = () => renderLocalTable();
+    // 6. Hapus Data
+    window.deleteUser = (id) => {
+        if (confirm('Hapus user ini?')) {
+            const transaction = db.transaction([storeName], "readwrite");
+            transaction.objectStore(storeName).delete(id);
+            transaction.oncomplete = () => displayData();
         }
-    }
+    };
 </script>
