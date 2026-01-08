@@ -1,0 +1,179 @@
+<style>
+    .login-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        background: rgba(17, 22, 34, 0.8);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 2.5rem;
+    }
+    .login-logo {
+        width: 64px;
+        height: 64px;
+        background: var(--accent-glow);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+    }
+    .nebula-muted { color: #8694a8 !important; }
+    .form-label { color: #8694a8; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-card shadow-lg rounded-4 text-center">
+        <div class="login-logo">
+            <i class="bi bi-shield-lock-fill text-white fs-3"></i>
+        </div>
+        
+        <h4 class="fw-bold text-white mb-1">Nebula Login</h4>
+        <p class="small nebula-muted mb-4">Akses sistem manajemen hotel</p>
+
+        <div id="login-alert" class="alert py-2 small mb-4" style="display: none;"></div>
+
+        <form id="form-login" class="text-start">
+            <div class="mb-3">
+                <label class="form-label">USERNAME / EMAIL</label>
+                <input type="text" id="l_user" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="Admin" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">PASSWORD</label>
+                <input type="password" id="l_pass" class="form-control form-control-sm bg-transparent text-white border-secondary" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" id="btn-login" class="btn btn-sm btn-primary shadow-sm w-100 rounded-pill py-2 fw-bold">
+                <i class="bi bi-box-arrow-in-right me-2"></i> MASUK KE SISTEM
+            </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top border-secondary border-opacity-10">
+            <small class="nebula-muted">App Build: <span class="app-build-text"></span></small>
+        </div>
+    </div>
+</div>
+
+<script>
+    var DB_NAME = 'Nebula_UserSync';
+    var STORE_NAME = 'users';
+
+    // 1. Helper Enkripsi
+    async function hashPassword(p) {
+        const msg = new TextEncoder().encode(p);
+        const buf = await crypto.subtle.digest('SHA-256', msg);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // 2. Inisialisasi DB (Versi 3 sesuai perbaikan sebelumnya)
+    function initDBLogin() {
+        return new Promise((resolve) => {
+            const req = indexedDB.open(DB_NAME, 3);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                if (!db.objectStoreNames.contains('tipe_kamar')) db.createObjectStore('tipe_kamar', { keyPath: 'id' });
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+        });
+    }
+
+    // 3. Eksekusi Login
+    $('#form-login').on('submit', async function(e) {
+        e.preventDefault();
+        const userVal = $('#l_user').val();
+        const passVal = $('#l_pass').val();
+        const hashedInput = await hashPassword(passVal);
+        const $alert = $('#login-alert').hide();
+        const $btn = $('#btn-login').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> PROSES...');
+
+        try {
+            const db = await initDBLogin();
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            
+            store.getAll().onsuccess = async (event) => {
+                const users = event.target.result;
+                // Cari di lokal
+                const foundLocal = users.find(u => 
+                    (u.username === userVal || u.email === userVal) && 
+                    u.password === hashedInput && u.deleted === 0
+                );
+
+                if (foundLocal) {
+                    // Login via Lokal Sukses
+                    saveSessionAndRedirect(foundLocal);
+                } else {
+                    // Jika tidak ada di lokal, cek ke Server (Hybrid)
+                    if (navigator.onLine) {
+                        checkServerLogin(userVal, hashedInput);
+                    } else {
+                        showError("User tidak ditemukan dan Anda sedang offline.");
+                    }
+                }
+            };
+        } catch (err) {
+            // Jika IndexedDB bermasalah, langsung lari ke server
+            checkServerLogin(userVal, hashedInput);
+        }
+    });
+
+    // 4. Cek ke Server & Tarik Data User
+    function checkServerLogin(user, hashedPass) {
+        $.ajax({
+            url: 'app.php',
+            method: 'POST',
+            data: JSON.stringify({ action: 'login', user: user, pass: hashedPass }),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: async function(res) {
+                if (res.success) {
+                    // Simpan data user tersebut ke IndexedDB agar bisa offline nanti
+                    const db = await initDBLogin();
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    
+                    const userData = res.user;
+                    userData.synced = true;
+                    store.put(userData);
+
+                    tx.oncomplete = () => {
+                        // Bersihkan last_sync agar setelah login lsg tarik data baru (Force Sync otomatis)
+                        localStorage.removeItem('last_sync_ts');
+                        saveSessionAndRedirect(userData);
+                    };
+                } else {
+                    showError(res.message);
+                }
+            },
+            error: () => showError("Gagal terhubung ke server.")
+        });
+    }
+
+    function saveSessionAndRedirect(u) {
+        const authData = {
+            isLoggedIn: true,
+            username: u.username,
+            group: u.user_group, // Ambil dari kolom user_group SQLite
+            loginTime: Date.now()
+        };
+        localStorage.setItem('nebula_auth', JSON.stringify(authData));
+        
+        $('#login-alert').removeClass('alert-danger').addClass('alert-success').text('Login Berhasil! Mengalihkan...').show();
+        setTimeout(() => window.location.reload(), 800);
+    }
+
+    function showError(msg) {
+        $('#login-alert').removeClass('alert-success').addClass('alert-danger').text(msg).show();
+        $('#btn-login').prop('disabled', false).html('<i class="bi bi-box-arrow-in-right me-2"></i> MASUK KE SISTEM');
+    }
+
+    // Tampilkan versi (Fungsi global yang kita bahas sebelumnya)
+    if(typeof window.app_ver !== 'undefined') $('.app-build-text').text(window.app_ver);
+</script>
