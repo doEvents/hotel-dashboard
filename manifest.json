@@ -1,0 +1,15 @@
+{
+  "name": "MyHotel Nebula Dashboard",
+  "short_name": "MyHotel",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#111622",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3003/3003984.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
